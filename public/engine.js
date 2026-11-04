@@ -14,10 +14,11 @@
   const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I/O to avoid confusion with 1/0
   // Deep enough that white names and scores on them pass WCAG AA (4.5:1+).
   const PLAYER_COLORS = ['#d6176f', '#0a74b8', '#7c3aed', '#b65300'];
-  // Sweet names, 5 letters at most.
+  // Sweet names, 5 letters at most. Kept clear of anything that doubles as slang or an insult
+  // (e.g. TART, LEMON, CREAM, FUDGE).
   const PLAYER_NAMES = [
-    'GUMMY', 'TAFFY', 'FUDGE', 'JELLY', 'MINTY', 'SUGAR', 'COCOA', 'CANDY', 'BERRY', 'LEMON',
-    'PEACH', 'MAPLE', 'HONEY', 'MOCHA', 'CREAM', 'GLAZE', 'SWIRL', 'DONUT', 'TART', 'CAKE',
+    'GUMMY', 'TAFFY', 'MOCHI', 'JELLY', 'MINTY', 'SUGAR', 'COCOA', 'CANDY', 'BERRY', 'MANGO',
+    'PEACH', 'MAPLE', 'HONEY', 'MOCHA', 'WAFER', 'GLAZE', 'SWIRL', 'DONUT', 'BOBA', 'CAKE',
   ];
 
   const randInt = (n) => Math.floor(Math.random() * n);
