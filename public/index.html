@@ -210,15 +210,14 @@
       display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.3;
     }
     .mode-option small { font-size: 11px; color: var(--ink-soft); font-weight: 400; }
+    /* The chosen mode is filled in pink; the other stays white. */
     .mode-option.selected {
-      background: linear-gradient(180deg, #fff, #ffe0ef); border-color: var(--pink-deep);
-      box-shadow: 0 0 0 3px rgba(216, 27, 114, 0.18), inset 0 2px 0 #fff;
+      background: linear-gradient(180deg, #e6488f, var(--pink) 55%, var(--pink-deep)); border-color: var(--pink-deep); color: #fff;
+      box-shadow: 0 3px 0 #8f0d4a, inset 0 2px 0 rgba(255, 255, 255, 0.35);
+      text-shadow: 0 1px 1px rgba(60, 0, 30, 0.45);
     }
-    .mode-option { position: relative; }
-    .mode-option.selected::after {
-      content: '\2713'; position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%;
-      background: var(--pink-deep); color: #fff; font-size: 13px; line-height: 24px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
+    .mode-option.selected small { color: #fff; }
+    .mode-title { margin: 10px 0 4px; font-size: 15px; font-weight: 500; color: var(--ink); }
     .mode-option:focus-visible { outline: 3px solid var(--pink-deep); outline-offset: 2px; }
     /* Whose turn it is. */
     #turn-banner {
@@ -228,8 +227,10 @@
     }
     #turn-banner[hidden] { display: none; }
     #turn-banner.mine { animation: turn-pop 0.9s ease-in-out infinite alternate; }
+    #turn-banner.flash { animation: turn-flash 0.5s ease-out; }
+    #turn-banner.mine.flash { animation: turn-flash 0.5s ease-out, turn-pop 0.9s ease-in-out 0.5s infinite alternate; }
+    @keyframes turn-flash { from { transform: scale(1.35); filter: brightness(1.3); } to { transform: scale(1); } }
     @keyframes turn-pop { from { transform: scale(1); } to { transform: scale(1.06); } }
-    .score-tag.turn { outline: 3px solid var(--pink-deep); outline-offset: 3px; }
     /* Last 10 seconds: bright red with a pulse on every tick. */
     #timer.low { --c1: #e0294f; --c2: #c8143c; --c3: #a00f2f; --edge: #70091f; color: #fff; }
     #timer.pulse { animation: timer-pulse 0.45s ease-out; }
@@ -241,21 +242,27 @@
     .score-tag {
       position: relative;
       padding: 5px 14px; border-radius: 999px; margin: 0 16px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0, rgba(255, 255, 255, 0.05) 28%, rgba(255, 255, 255, 0) 34%, rgba(0, 0, 0, 0.14) 100%),
-        currentColor;
-      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.16), 0 6px 14px rgba(224, 35, 126, 0.2), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+      /* White sweet with the player's colour as text; filled with their colour when it's their turn. */
+      background: #fff;
+      box-shadow: 0 3px 0 color-mix(in srgb, currentColor 35%, #fff), 0 6px 14px rgba(224, 35, 126, 0.15);
       display: flex; align-items: center; gap: 10px; white-space: nowrap;
+      transition: background 0.2s, box-shadow 0.2s;
     }
     .score-tag::before, .score-tag::after, #timer::before, #timer::after { width: 20px; }
     .score-tag::before, #timer::before { left: -16px; }
     .score-tag::after, #timer::after { right: -16px; transform: scaleX(-1); }
-    .score-tag { --c1: color-mix(in srgb, currentColor 80%, #fff); --c2: currentColor; --c3: color-mix(in srgb, currentColor 75%, #000); }
+    .score-tag { --c1: #fff; --c2: #fff; --c3: #ffe3f0; }
+    .score-tag.turn {
+      --c1: currentColor; --c2: currentColor; --c3: color-mix(in srgb, currentColor 80%, #000);
+      background: currentColor;
+      box-shadow: 0 3px 0 color-mix(in srgb, currentColor 70%, #000), 0 6px 16px color-mix(in srgb, currentColor 45%, transparent);
+    }
+    .score-tag.turn .tag-name, .score-tag.turn .tag-score { color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35); }
     .score-tag.right { flex-direction: row-reverse; }
     .score-tag.empty { visibility: hidden; }
     .score-tag.bump .tag-score { animation: score-bump 0.35s ease-out; }
     @keyframes score-bump { from { transform: scale(1.5); } to { transform: scale(1); } }
-    .score-tag .tag-name, .score-tag .tag-score { color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35); position: relative; line-height: 20px; display: inline-flex; align-items: center; }
+    .score-tag .tag-name, .score-tag .tag-score { color: inherit; position: relative; line-height: 20px; display: inline-flex; align-items: center; }
     .score-tag .tag-name { font-size: 12px; }
     .score-tag .tag-score { font-size: 15px; font-weight: 500; }
     canvas { display: block; }
@@ -291,7 +298,8 @@
     <p class="hint" id="connecting-hint" style="display:none;">Connecting...</p>
 
     <div id="room-view" style="display:none;">
-      <div class="mode-picker" role="radiogroup" aria-label="Game mode">
+      <p class="mode-title" id="mode-title">Choose how to play</p>
+      <div class="mode-picker" role="radiogroup" aria-labelledby="mode-title">
         <button type="button" class="mode-option" data-mode="free" role="radio">Free for all<small>Everyone swaps at once</small></button>
         <button type="button" class="mode-option" data-mode="turns" role="radio">Take turns<small>10 turns each, 10s a turn</small></button>
       </div>

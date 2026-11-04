@@ -1002,6 +1002,12 @@
     }
     const p = playerById(turn.id);
     const mine = turn.id === state.playerId;
+    if (turn.id !== prev && prev) {
+      // The turn just passed on: a quick flash so everyone notices.
+      banner.classList.remove('flash');
+      void banner.offsetWidth;
+      banner.classList.add('flash');
+    }
     banner.hidden = false;
     banner.classList.toggle('mine', mine);
     banner.style.setProperty('--turn-color', p ? p.color : '#d81b72');
@@ -1019,7 +1025,7 @@
 
   socket.on('swap', (msg) => {
     if (!state.grid) return;
-    if (msg.turn !== undefined) setTurn(msg.turn);
+    // Turn-based: the turn passes on once this swap's cascade has finished on screen.
     queueSwap(msg);
     if (document.hidden) flushQueue();
     updateScoreboard(msg.players);
@@ -1077,12 +1083,17 @@
         dur: 240,
       });
     });
+    if (msg.turn !== undefined) state.queue.push({ kind: 'turn', turn: msg.turn, dur: 1 });
   }
 
   // quiet: catching up (hidden tab or a big backlog), so no sounds or effects.
   function startTask(task, now, quiet = false) {
     task.start = now;
     if (quiet) task.quiet = true;
+    if (task.kind === 'turn') {
+      setTurn(task.turn);
+      return;
+    }
     if (task.kind === 'swap') {
       const { a, b } = task;
       const ca = state.grid[a.y][a.x];
@@ -1156,6 +1167,7 @@
   }
 
   function updateTask(task, t) {
+    if (task.kind === 'turn') return;
     if (task.kind === 'swap') {
       const [ia, ib] = task.ids;
       const k = easeOut(t);
