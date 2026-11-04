@@ -1,0 +1,13 @@
+{
+  "name": "candymates",
+  "version": "1.0.0",
+  "description": "Online multiplayer match-3 candy battle for up to 4 mates on one shared board. Peer-to-peer, runs on GitHub Pages",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^5.3.0"
+  }
+}
