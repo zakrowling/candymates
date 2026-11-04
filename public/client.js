@@ -107,6 +107,12 @@
     src.stop(t0 + dur + 0.05);
   }
 
+  // A bright bell: a sine with a soft higher partial, like a little music-box chime.
+  function bell(ac, f, t0, dur, peak) {
+    osc(ac, { from: f, t0, dur, peak, attack: 0.003 });
+    osc(ac, { from: f * 2.76, t0, dur: dur * 0.5, peak: peak * 0.3, attack: 0.002 });
+  }
+
   // A major pentatonic run, so cascades climb up a happy scale.
   const SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760];
   const SFX = {
@@ -117,40 +123,61 @@
       osc(ac, { type: 'triangle', from: 220, to: 160, dur: 0.12, peak: 0.18 });
       osc(ac, { type: 'triangle', from: 180, to: 130, t0: ac.currentTime + 0.12, dur: 0.14, peak: 0.16 });
     },
-    // Matched candies pop: bubbly blips that climb with each cascade.
+    // Matches: a bouncy "pi-pu!" chirp and a little bell, climbing a cute scale each cascade.
     pop(ac, level = 1) {
       const t = ac.currentTime;
       const f = SCALE[Math.min(SCALE.length - 1, level - 1)];
-      osc(ac, { from: f * 0.6, to: f, dur: 0.09, peak: 0.22, t0: t });
-      osc(ac, { type: 'triangle', from: f * 1.5, to: f * 2, dur: 0.08, peak: 0.08, t0: t + 0.04 });
-      noise(ac, { t0: t, dur: 0.05, peak: 0.08, type: 'highpass', from: 3000 });
+      osc(ac, { from: f, to: f * 1.5, dur: 0.07, peak: 0.36, t0: t, attack: 0.003 });
+      osc(ac, { from: f * 1.33, to: f * 2, dur: 0.09, peak: 0.32, t0: t + 0.075, attack: 0.003 });
+      bell(ac, f * 2, t + 0.07, 0.35, 0.16);
     },
+    // A special candy is made: a magical twinkle running up the scale.
     special(ac) {
       const t = ac.currentTime;
-      [1047, 1319, 1568, 2093].forEach((f, i) => osc(ac, { type: 'triangle', from: f, t0: t + i * 0.05, dur: 0.18, peak: 0.08 }));
+      [1047, 1319, 1568, 2093, 2637].forEach((f, i) => bell(ac, f, t + i * 0.055, 0.4, 0.15));
+      noise(ac, { t0: t, dur: 0.4, peak: 0.06, type: 'highpass', from: 6000, to: 9000 });
     },
+    // Striped candy goes off: a sparkly swish.
     stripe(ac) {
-      osc(ac, { type: 'sawtooth', from: 1800, to: 300, dur: 0.3, peak: 0.08 });
-      noise(ac, { dur: 0.3, peak: 0.12, from: 4000, to: 800, q: 0.6 });
+      const t = ac.currentTime;
+      osc(ac, { type: 'triangle', from: 600, to: 2400, dur: 0.22, peak: 0.22 });
+      noise(ac, { dur: 0.28, peak: 0.12, from: 2000, to: 7000, q: 0.8 });
+      [1568, 2093, 2637].forEach((f, i) => bell(ac, f, t + 0.12 + i * 0.05, 0.3, 0.1));
     },
+    // Wrapped candy goes off: a springy "boing".
     wrapped(ac) {
-      osc(ac, { from: 160, to: 50, dur: 0.4, peak: 0.4 });
-      noise(ac, { dur: 0.35, peak: 0.25, type: 'lowpass', from: 2000, to: 200 });
+      const t = ac.currentTime;
+      const o = ac.createOscillator();
+      const vib = ac.createOscillator();
+      const vibGain = ac.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(220, t);
+      o.frequency.exponentialRampToValueAtTime(660, t + 0.08);
+      o.frequency.exponentialRampToValueAtTime(330, t + 0.4);
+      vib.frequency.value = 22;
+      vibGain.gain.value = 40;
+      vib.connect(vibGain).connect(o.frequency);
+      o.connect(envGain(ac, t, 0.4, 0.005, 0.4));
+      o.start(t);
+      vib.start(t);
+      o.stop(t + 0.5);
+      vib.stop(t + 0.5);
+      bell(ac, 1319, t + 0.05, 0.3, 0.1);
     },
+    // Colour bomb: a rainbow glissando of bells.
     bomb(ac) {
       const t = ac.currentTime;
-      for (let i = 0; i < 10; i++) osc(ac, { type: 'triangle', from: 600 + i * 150, to: 1800 + i * 200, t0: t + i * 0.03, dur: 0.12, peak: 0.06 });
-      osc(ac, { from: 120, to: 40, t0: t + 0.1, dur: 0.6, peak: 0.35 });
-    },
-    shuffle(ac) {
-      for (let i = 0; i < 6; i++) noise(ac, { t0: ac.currentTime + i * 0.06, dur: 0.06, peak: 0.1, from: 1200 + i * 300, q: 2 });
+      [523, 659, 784, 1047, 1319, 1568, 2093, 2637, 3136].forEach((f, i) => bell(ac, f, t + i * 0.04, 0.45, 0.14));
+      osc(ac, { from: 260, to: 520, t0: t, dur: 0.3, peak: 0.25 });
     },
     ready(ac) {
       osc(ac, { type: 'square', from: 660, dur: 0.12, peak: 0.07 });
     },
+    // "Ta-da!"
     go(ac) {
       const t = ac.currentTime;
-      [523, 659, 784, 1047].forEach((f, i) => osc(ac, { type: 'square', from: f, t0: t + i * 0.07, dur: 0.12, peak: 0.07 }));
+      [784, 1047, 1319, 1568].forEach((f, i) => bell(ac, f, t + i * 0.07, 0.5, 0.14));
+      osc(ac, { from: 1047, to: 2093, t0: t + 0.28, dur: 0.12, peak: 0.25 });
     },
     tick(ac, secs) {
       const f = secs <= 3 ? 1760 : 1320;
@@ -197,6 +224,7 @@
         return;
       }
       if (!clock) return;
+      if (!state.playing) { halt(); return; }
       const elapsed = Math.max(0, clock());
       if (!(duration > FADE * 2)) {
         // Length not known yet: just start playing; the loop maths takes over once it's loaded.
@@ -235,6 +263,7 @@
 
     return {
       start(gameClock) {
+        if (!state.playing) return; // only ever during a game
         fadeOutFrom = 0;
         clock = gameClock;
         if (!timer) timer = setInterval(update, 100);
@@ -912,6 +941,9 @@
   // They play one after another so every player sees the same thing; if several players swap at
   // once the queue speeds up to keep up.
 
+  // Cascade cheers, getting sweeter the longer the chain.
+  const CUTE_WORDS = ['Yummy!', 'Sweet!', 'Kawaii!', 'Sugar rush!', 'Sooo sweet!'];
+
   const easeOut = (t) => 1 - (1 - t) ** 3;
   const easeOutBack = (t) => {
     const c1 = 1.4;
@@ -972,7 +1004,10 @@
       });
       const n = step.cleared.length || 1;
       state.popups.push({ text: `+${step.points}`, x: sx / n + 0.5, y: sy / n + 0.5, color, born: now, big: step.level > 1 });
-      if (step.level > 1) state.popups.push({ text: `Combo x${step.level}`, x: sx / n + 0.5, y: sy / n - 0.2, color: '#e0237e', born: now, small: true });
+      if (step.level > 1) {
+        const word = CUTE_WORDS[Math.min(CUTE_WORDS.length - 1, step.level - 2)];
+        state.popups.push({ text: `${word} x${step.level}`, x: sx / n + 0.5, y: sy / n - 0.2, color: '#e0237e', born: now, small: true });
+      }
       const kinds = new Set(step.cleared.map((cl) => cl.s));
       if (kinds.has('bomb')) playSound('bomb');
       else if (kinds.has('w')) playSound('wrapped');
@@ -1272,7 +1307,7 @@
       ctx.lineWidth = 3;
       ctx.shadowColor = p.color;
       ctx.shadowBlur = cur.sel ? 14 : 6;
-      cellBox(cur.x, cur.y, 3, 10);
+      cellBox(cur.x, cur.y, 3, 16);
       ctx.stroke();
       if (cur.sel) {
         ctx.fillStyle = `${p.color}33`;
@@ -1280,7 +1315,7 @@
       }
       ctx.restore();
       // Name tag above the cell.
-      ctx.font = '10px "Geist Pixel", monospace';
+      ctx.font = '500 11px "Kiwi Maru", sans-serif';
       const w = ctx.measureText(p.name).width + 10;
       const tx = Math.max(0, Math.min(state.cols * CELL - w, cur.x * CELL + CELL / 2 - w / 2));
       const ty = Math.max(0, cur.y * CELL - 8);
@@ -1297,7 +1332,7 @@
     if (state.hover && canPlay()) {
       ctx.strokeStyle = 'rgba(224, 35, 126, 0.45)';
       ctx.lineWidth = 2;
-      cellBox(state.hover.x, state.hover.y, 3, 10);
+      cellBox(state.hover.x, state.hover.y, 3, 16);
       ctx.stroke();
     }
     if (state.selected) {
@@ -1307,7 +1342,7 @@
       ctx.lineWidth = 3.5;
       ctx.shadowColor = myColor;
       ctx.shadowBlur = 16 * pulse;
-      cellBox(state.selected.x, state.selected.y, 2, 11);
+      cellBox(state.selected.x, state.selected.y, 3, 16);
       ctx.stroke();
       ctx.restore();
     }
@@ -1398,7 +1433,7 @@
     state.popups.forEach((p) => {
       const t = (now - p.born) / 900;
       const size = p.small ? 13 : p.big ? 24 : 19;
-      ctx.font = `${size}px "Geist Pixel", monospace`;
+      ctx.font = `500 ${size}px "Kiwi Maru", sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const x = Math.max(40, Math.min(w - 40, p.x * CELL));
@@ -1418,13 +1453,13 @@
     const w = state.cols * CELL;
     const h = state.rows * CELL;
     let text = null;
-    if (state.readyTicks > 0) text = `Ready? ${Math.ceil(state.readyTicks / TICK_RATE)}`;
-    else if (now < state.goUntil) text = 'Go!';
+    if (state.readyTicks > 0) text = `Ready? ♡ ${Math.ceil(state.readyTicks / TICK_RATE)}`;
+    else if (now < state.goUntil) text = 'Go! ♡';
     if (!text) return;
     ctx.fillStyle = 'rgba(255, 214, 236, 0.6)';
     roundRect(ctx, 0, 0, w, h, 30);
     ctx.fill();
-    ctx.font = '64px "Geist Pixel", monospace';
+    ctx.font = '500 64px "Kiwi Maru", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round';

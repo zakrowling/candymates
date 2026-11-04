@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cpath d=%22M2 10l6 6-6 6zM30 10l-6 6 6 6z%22 fill=%22%23ff4fa3%22/%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%229%22 fill=%22%23ff4fa3%22/%3E%3Cpath d=%22M10 12l12 8M10 18l9 6M13 8l9 6%22 stroke=%22%23fff%22 stroke-width=%222%22/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist+Pixel&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -20,8 +20,8 @@
     body {
       background: #ffd9ec;
       color: var(--ink);
-      font-family: 'Geist Pixel', 'Courier New', monospace;
-      font-synthesis: none;
+      font-family: 'Kiwi Maru', 'Hiragino Maru Gothic ProN', 'Arial Rounded MT Bold', sans-serif;
+      font-weight: 400;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -49,7 +49,7 @@
     }
     header { text-align: center; margin-bottom: 20px; }
     #logo {
-      font-size: 44px; line-height: 1.2; letter-spacing: 2px;
+      font-size: 50px; line-height: 1.1; letter-spacing: 1px; font-weight: 500; text-transform: lowercase;
       /* Glossy candy letters: white outline, a pink drop shadow and a shine. */
       text-shadow: 0 2px 0 #fff, 0 -2px 0 #fff, 2px 0 0 #fff, -2px 0 0 #fff, 0 6px 0 #e0237e, 0 10px 18px rgba(224, 35, 126, 0.45);
     }
@@ -59,10 +59,12 @@
     #logo span:nth-child(6n+4) { color: #2cc28a; }
     #logo span:nth-child(6n+5) { color: #22b8f0; }
     #logo span:nth-child(6n+6) { color: #9b5cff; }
-    @media (max-width: 520px) { #logo { font-size: 26px; } }
+    #logo::before, #logo::after { content: '♡'; color: #ff7ab8; font-size: 0.6em; vertical-align: 0.35em; margin: 0 0.3em; text-shadow: none; }
+    @media (max-width: 520px) { #logo { font-size: 30px; } }
     #logo-img { display: block; width: 100%; max-width: 440px; height: auto; margin: 0 auto; }
     #logo-img[hidden], #logo[hidden] { display: none; }
-    .subtitle { color: var(--ink); margin-top: 10px; }
+    .subtitle { color: var(--ink); margin-top: 8px; font-size: 15px; }
+    .subtitle::after { content: ' ♡'; color: var(--pink); }
     /* Hide the logo while playing so the board sits at the top of the screen. */
     body.in-game header { display: none; }
     body.in-game { padding-top: 10px; }
@@ -82,23 +84,32 @@
       position: relative; display: block;
       width: calc(100% - 56px); margin: 12px auto 0;
       background:
+        radial-gradient(ellipse 22px 60% at 0 50%, rgba(0, 0, 0, 0.14), transparent),
+        radial-gradient(ellipse 22px 60% at 100% 50%, rgba(0, 0, 0, 0.14), transparent),
         linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0, rgba(255, 255, 255, 0.15) 42%, rgba(255, 255, 255, 0) 50%),
         linear-gradient(180deg, var(--c1), var(--c2) 55%, var(--c3));
       color: #fff; border: none; padding: 13px 20px;
-      font-family: inherit; font-size: 15px; border-radius: 999px; cursor: pointer;
+      font-family: inherit; font-size: 15px; font-weight: 500; border-radius: 999px; cursor: pointer;
       text-shadow: 0 1px 0 rgba(120, 0, 60, 0.35);
       box-shadow: 0 5px 0 var(--edge), 0 10px 18px rgba(224, 35, 126, 0.3), inset 0 -4px 8px rgba(0, 0, 0, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.7);
       transition: transform 0.08s, box-shadow 0.08s;
     }
-    .btn::before, .btn::after {
-      content: ''; position: absolute; top: 12%; width: 30px; height: 76%; pointer-events: none;
+    /* Wrapper twists: a cellophane fan with a frilly edge and pleats running out from a gathered neck
+       that tucks into the sweet. The shape is a mask over the sweet's own colours, so every button
+       gets matching twists; the pleats and shine are a colour-free overlay on top. */
+    .btn::before, .btn::after, .score-tag::before, .score-tag::after, #timer::before, #timer::after {
+      content: ''; position: absolute; top: -6%; height: 112%; pointer-events: none;
       background:
-        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0 2px, rgba(255, 255, 255, 0) 2px 6px),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 60' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='n' x1='1' x2='0'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='.28'/%3E%3Cstop offset='.35' stop-color='%23000' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='v' y1='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.55'/%3E%3Cstop offset='.45' stop-color='%23fff' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='.18'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M40 23 C33 20 22 8 6 2 C9 7 3 10 5 15 C8 19 2 23 4 30 C2 37 8 41 5 45 C3 50 9 53 6 58 C22 52 33 40 40 37 Z' fill='url(%23v)'/%3E%3Cg stroke-linecap='round' fill='none'%3E%3Cpath d='M39 30 L6 4 M39 30 L5 16 M39 30 L4 30 M39 30 L5 44 M39 30 L6 56' stroke='%23fff' stroke-opacity='.55' stroke-width='1.6'/%3E%3Cpath d='M39 30 L5 10 M39 30 L4 23 M39 30 L4 37 M39 30 L5 50' stroke='%23000' stroke-opacity='.13' stroke-width='1.4'/%3E%3C/g%3E%3Cpath d='M40 23 C33 20 22 8 6 2' stroke='%23fff' stroke-opacity='.7' stroke-width='1.2' fill='none'/%3E%3Crect x='0' y='0' width='40' height='60' fill='url(%23n)'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat,
         linear-gradient(180deg, var(--c1), var(--c2) 50%, var(--c3));
-      filter: drop-shadow(0 3px 0 var(--edge));
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 60' preserveAspectRatio='none'%3E%3Cpath d='M40 23 C33 20 22 8 6 2 C9 7 3 10 5 15 C8 19 2 23 4 30 C2 37 8 41 5 45 C3 50 9 53 6 58 C22 52 33 40 40 37 Z'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 60' preserveAspectRatio='none'%3E%3Cpath d='M40 23 C33 20 22 8 6 2 C9 7 3 10 5 15 C8 19 2 23 4 30 C2 37 8 41 5 45 C3 50 9 53 6 58 C22 52 33 40 40 37 Z'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
     }
-    .btn::before { left: -26px; clip-path: polygon(100% 38%, 0 0, 22% 25%, 0 50%, 22% 75%, 0 100%, 100% 62%); }
-    .btn::after { right: -26px; clip-path: polygon(0 38%, 100% 0, 78% 25%, 100% 50%, 78% 75%, 100% 100%, 0 62%); }
+    .btn::before, .btn::after { width: 34px; }
+    .btn::before { left: -28px; }
+    .btn::after { right: -28px; transform: scaleX(-1); }
+    /* The ends of the sweet pinch in where the wrapper is gathered. */
+    .btn { background-clip: padding-box; }
     .btn:hover { filter: brightness(1.06); }
     .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--edge), 0 4px 10px rgba(224, 35, 126, 0.3), inset 0 -4px 8px rgba(0, 0, 0, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.7); }
     .btn.secondary { --c1: #b5e9ff; --c2: #4cc3f5; --c3: #1d9fd8; --edge: #1683b5; }
@@ -112,13 +123,13 @@
     input[type="text"] {
       width: 100%; padding: 12px; font-family: inherit; font-size: 16px; text-align: center;
       text-transform: uppercase; background: rgba(255, 255, 255, 0.9); border: 2px solid #ffb3d9;
-      color: var(--pink-deep); border-radius: 999px; margin: 10px 0; letter-spacing: 6px;
+      color: var(--pink-deep); border-radius: 999px; margin: 10px 0; letter-spacing: 4px; font-weight: 500;
       box-shadow: inset 0 3px 8px rgba(224, 35, 126, 0.15);
     }
     input[type="text"]::placeholder { color: #ffb3d9; }
     .or { margin: 16px 0; color: var(--ink-soft); }
     .room-display {
-      font-size: 26px; letter-spacing: 8px; color: var(--pink-deep);
+      font-size: 26px; letter-spacing: 6px; color: var(--pink-deep); font-weight: 500;
       margin: 12px 0; padding: 12px; background: rgba(255, 255, 255, 0.85); border-radius: 18px;
       box-shadow: inset 0 3px 10px rgba(224, 35, 126, 0.15);
     }
@@ -192,27 +203,17 @@
       box-shadow: 0 3px 0 rgba(0, 0, 0, 0.16), 0 6px 14px rgba(224, 35, 126, 0.2), inset 0 2px 0 rgba(255, 255, 255, 0.6);
       display: flex; align-items: center; gap: 10px; white-space: nowrap;
     }
-    .score-tag::before, .score-tag::after, #timer::before, #timer::after {
-      content: ''; position: absolute; top: 14%; width: 18px; height: 72%; pointer-events: none;
-      background:
-        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0 2px, rgba(255, 255, 255, 0) 2px 5px),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.12)),
-        currentColor;
-    }
-    #timer::before, #timer::after {
-      background:
-        repeating-linear-gradient(90deg, rgba(255, 79, 163, 0.25) 0 2px, rgba(255, 255, 255, 0) 2px 5px),
-        linear-gradient(180deg, var(--c1), var(--c3));
-    }
-    .score-tag::before, #timer::before { left: -15px; clip-path: polygon(100% 38%, 0 0, 25% 25%, 0 50%, 25% 75%, 0 100%, 100% 62%); }
-    .score-tag::after, #timer::after { right: -15px; clip-path: polygon(0 38%, 100% 0, 75% 25%, 100% 50%, 75% 75%, 100% 100%, 0 62%); }
+    .score-tag::before, .score-tag::after, #timer::before, #timer::after { width: 20px; }
+    .score-tag::before, #timer::before { left: -16px; }
+    .score-tag::after, #timer::after { right: -16px; transform: scaleX(-1); }
+    .score-tag { --c1: color-mix(in srgb, currentColor 55%, #fff); --c2: currentColor; --c3: color-mix(in srgb, currentColor 75%, #000); }
     .score-tag.right { flex-direction: row-reverse; }
     .score-tag.empty { visibility: hidden; }
     .score-tag.bump .tag-score { animation: score-bump 0.35s ease-out; }
     @keyframes score-bump { from { transform: scale(1.5); } to { transform: scale(1); } }
     .score-tag .tag-name, .score-tag .tag-score { color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); position: relative; }
     .score-tag .tag-name { font-size: 11px; }
-    .score-tag .tag-score { font-size: 14px; display: inline-block; }
+    .score-tag .tag-score { font-size: 15px; font-weight: 500; display: inline-block; }
     canvas { display: block; }
     .board-wrap { position: relative; max-width: 100%; line-height: 0; }
     #game-canvas { max-width: 100%; height: auto; border-radius: 30px; touch-action: none; cursor: pointer; }
@@ -220,7 +221,7 @@
     #game-over {
       display: none; position: absolute; inset: 70px 0 auto 0; margin: auto; width: 360px;
     }
-    #game-over h3 { color: var(--pink-deep); margin-bottom: 12px; font-size: 22px; text-shadow: 0 2px 0 #fff; }
+    #game-over h3 { color: var(--pink-deep); margin-bottom: 12px; font-size: 24px; font-weight: 500; text-shadow: 0 2px 0 #fff; }
   </style>
 </head>
 <body>
