@@ -202,6 +202,34 @@
     .sound-toggle.off { color: var(--ink-soft); }
     .sound-toggle.off .off-slash { display: inline; }
     .sound-toggle.off .on-waves { display: none; }
+    /* Game mode choice in the lobby. */
+    .mode-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 4px; }
+    .mode-option {
+      font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer; padding: 10px 8px;
+      border-radius: 18px; border: 2px solid #e48ab8; background: rgba(255, 255, 255, 0.85); color: var(--pink-deep);
+      display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.3;
+    }
+    .mode-option small { font-size: 11px; color: var(--ink-soft); font-weight: 400; }
+    .mode-option.selected {
+      background: linear-gradient(180deg, #fff, #ffe0ef); border-color: var(--pink-deep);
+      box-shadow: 0 0 0 3px rgba(216, 27, 114, 0.18), inset 0 2px 0 #fff;
+    }
+    .mode-option { position: relative; }
+    .mode-option.selected::after {
+      content: '\2713'; position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%;
+      background: var(--pink-deep); color: #fff; font-size: 13px; line-height: 24px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .mode-option:focus-visible { outline: 3px solid var(--pink-deep); outline-offset: 2px; }
+    /* Whose turn it is. */
+    #turn-banner {
+      margin: 0 0 8px; padding: 4px 16px; border-radius: 999px; font-size: 14px; font-weight: 500;
+      color: #fff; background: var(--turn-color, #d81b72); text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+    }
+    #turn-banner[hidden] { display: none; }
+    #turn-banner.mine { animation: turn-pop 0.9s ease-in-out infinite alternate; }
+    @keyframes turn-pop { from { transform: scale(1); } to { transform: scale(1.06); } }
+    .score-tag.turn { outline: 3px solid var(--pink-deep); outline-offset: 3px; }
     /* Last 10 seconds: bright red with a pulse on every tick. */
     #timer.low { --c1: #e0294f; --c2: #c8143c; --c3: #a00f2f; --edge: #70091f; color: #fff; }
     #timer.pulse { animation: timer-pulse 0.45s ease-out; }
@@ -263,6 +291,10 @@
     <p class="hint" id="connecting-hint" style="display:none;">Connecting...</p>
 
     <div id="room-view" style="display:none;">
+      <div class="mode-picker" role="radiogroup" aria-label="Game mode">
+        <button type="button" class="mode-option" data-mode="free" role="radio">Free for all<small>Everyone swaps at once</small></button>
+        <button type="button" class="mode-option" data-mode="turns" role="radio">Take turns<small>10 turns each, 10s a turn</small></button>
+      </div>
       <button class="btn" id="start-btn">Start Game</button>
       <button class="btn outline link-only" id="home-btn">Create or join a new room</button>
       <p class="hint" id="reconnect-hint" style="display:none;"></p>
@@ -302,8 +334,9 @@
         <div class="score-tag right empty" data-slot="4"></div>
       </div>
     </div>
+    <p id="turn-banner" hidden></p>
     <div class="board-wrap"><canvas id="game-canvas" width="1032" height="645"></canvas></div>
-    <p class="hint">Everyone plays the same board. Swap two neighbouring candies (drag, or click one then the other) to line up 3 or more. Match 4 for a striped candy, an L or T for a wrapped candy and 5 for a colour bomb. Cascades multiply your points. Highest score after 3 minutes wins.</p>
+    <p class="hint">Everyone plays the same board. Swap two neighbouring candies (drag, or click one then the other) to line up 3 or more. Match 4 for a striped candy, an L or T for a wrapped candy and 5 for a colour bomb. Cascades multiply your points. Free for all: highest score after 3 minutes wins. Take turns: 10 turns each, highest score wins.</p>
 
     <div id="game-over" class="card">
       <h3 id="game-over-title">TIME UP!</h3>

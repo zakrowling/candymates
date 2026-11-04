@@ -135,7 +135,7 @@
         }
         if (!conns.has(id)) return;
         const args = Array.isArray(msg.args) ? msg.args : [];
-        if (msg.ev === 'startGame') room.start(id);
+        if (msg.ev === 'startGame') room.start(id, args[0]);
         else if (msg.ev === 'input') room.input(id, args[0]);
         else if (msg.ev === 'leaveRoom') conn.close();
       });
@@ -315,7 +315,7 @@
       if (ev === 'leaveRoom') return teardown();
 
       if (mode === 'host' && room) {
-        if (ev === 'startGame') room.start(localId);
+        if (ev === 'startGame') room.start(localId, args[0]);
         else if (ev === 'input') room.input(localId, args[0]);
       } else if (mode === 'client' && hostConn && hostConn.open) {
         hostConn.send({ ev, args });

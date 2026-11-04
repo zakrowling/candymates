@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { GameRoom, generateRoomCode, TICK_RATE, GAME_SECONDS, READY_SECONDS } = require('../public/engine.js');
+const { GameRoom, generateRoomCode, TICK_RATE, GAME_SECONDS, READY_SECONDS, TURN_SECONDS, TURNS_EACH } = require('../public/engine.js');
 
 function seeded(seed) {
   let a = seed >>> 0;
@@ -243,4 +243,71 @@ test('joining mid-game drops straight in without interrupting anyone', () => {
   room.input('late', findGoodSwap(room.board));
   assert.equal(last('swap').data.by, 'late');
   assert.ok(room.players.get('late').score > 0);
+});
+
+function turnRoom(players = 3) {
+  const ctx = makeRoom();
+  for (let i = 1; i <= players; i++) ctx.room.join(`p${i}`);
+  ctx.room.start('p1', { mode: 'turns' });
+  return ctx;
+}
+
+test('free for all is the default; turn-based is chosen at the start', () => {
+  const free = startedRoom(2);
+  assert.equal(free.last('gameStarted').data.mode, 'free');
+  assert.equal(free.last('gameStarted').data.turn, null);
+  const { last } = turnRoom(2);
+  const payload = last('gameStarted').data;
+  assert.equal(payload.mode, 'turns');
+  assert.deepEqual(payload.turn, { id: 'p1', ticksLeft: TURN_SECONDS * TICK_RATE, number: 1, of: TURNS_EACH });
+  const odd = makeRoom();
+  odd.room.join('p1');
+  odd.room.start('p1', { mode: 'chaos' });
+  assert.equal(odd.room.mode, 'free', 'unknown modes fall back to free for all');
+});
+
+test('turn-based: only the player whose turn it is can swap, then it passes along in order', () => {
+  const { room, last } = turnRoom(3);
+  room.input('p2', findGoodSwap(room.board));
+  assert.equal(last('swapRejected', 'p2').data.reason, 'turn');
+  assert.equal(room.players.get('p2').score, 0);
+  room.input('p1', findGoodSwap(room.board));
+  assert.equal(last('swap').data.turn.id, 'p2');
+  room.input('p2', findGoodSwap(room.board));
+  room.input('p3', findGoodSwap(room.board));
+  assert.equal(room.turnId, 'p1', 'back to the first player');
+  assert.equal(room.players.get('p1').turnsTaken, 2);
+});
+
+test('turn-based: a turn is skipped if nobody swaps in time, and the clock does not run', () => {
+  const { room, run, last } = turnRoom(2);
+  const clock = room.ticksLeft;
+  run(TURN_SECONDS * TICK_RATE - 1);
+  assert.equal(room.turnId, 'p1');
+  run(1);
+  assert.equal(room.turnId, 'p2');
+  assert.equal(last('turnSkipped').data.id, 'p1');
+  assert.equal(room.ticksLeft, clock, 'no 3-minute clock in turn-based games');
+});
+
+test('turn-based: the game ends once everyone has had their turns, highest score wins', () => {
+  const { room, last, isRunning } = turnRoom(2);
+  for (let t = 0; t < TURNS_EACH * 2; t++) {
+    assert.ok(room.started, `still going before turn ${t + 1}`);
+    room.input(room.turnId, findGoodSwap(room.board));
+  }
+  assert.equal(room.started, false);
+  assert.equal(isRunning(), false);
+  assert.equal(room.players.get('p1').turnsTaken, TURNS_EACH);
+  assert.equal(room.players.get('p2').turnsTaken, TURNS_EACH);
+  const { standings, winnerIds } = last('gameOver').data;
+  assert.ok(winnerIds.includes(standings[0].id));
+});
+
+test('turn-based: if the player whose turn it is leaves, the next player goes', () => {
+  const { room } = turnRoom(3);
+  room.input('p1', findGoodSwap(room.board));
+  assert.equal(room.turnId, 'p2');
+  room.leave('p2');
+  assert.equal(room.turnId, 'p3');
 });

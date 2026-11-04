@@ -721,6 +721,7 @@
 
   function showLobby() {
     state.playing = false;
+    document.body.classList.remove('turn-mode');
     musicOn = false;
     music.stop();
     state.selected = null;
@@ -784,8 +785,23 @@
   $('room-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') $('join-btn').click();
   });
-  $('start-btn').addEventListener('click', () => socket.emit('startGame'));
-  $('again-btn').addEventListener('click', () => socket.emit('startGame'));
+  // Free for all (everyone swaps at once) or take turns; remembered for next time.
+  let chosenMode = (() => { try { return localStorage.getItem('candymates-mode') === 'turns' ? 'turns' : 'free'; } catch { return 'free'; } })();
+  function showMode() {
+    document.querySelectorAll('.mode-option').forEach((btn) => {
+      const on = btn.dataset.mode === chosenMode;
+      btn.classList.toggle('selected', on);
+      btn.setAttribute('aria-checked', String(on));
+    });
+  }
+  document.querySelectorAll('.mode-option').forEach((btn) => btn.addEventListener('click', () => {
+    chosenMode = btn.dataset.mode;
+    try { localStorage.setItem('candymates-mode', chosenMode); } catch { /* private mode */ }
+    showMode();
+  }));
+  showMode();
+  $('start-btn').addEventListener('click', () => socket.emit('startGame', { mode: chosenMode }));
+  $('again-btn').addEventListener('click', () => socket.emit('startGame', { mode: state.mode || chosenMode }));
   $('leave-btn').addEventListener('click', () => {
     socket.emit('leaveRoom');
     resetToSetup();
@@ -905,6 +921,11 @@
     state.readyTicks = payload.readyTicks;
     state.gameSeconds = payload.gameSeconds;
     state.round = payload.round;
+    state.playTicks = payload.playTicks;
+    state.mode = payload.mode || 'free';
+    state.turnSeconds = payload.turnSeconds || 10;
+    setTurn(payload.turn);
+    document.body.classList.toggle('turn-mode', state.mode === 'turns');
     state.lastStateAt = performance.now();
     musicOn = false;
     music.stop();
@@ -933,8 +954,10 @@
     if (!state.grid) return;
     const wasReady = state.readyTicks > 0;
     state.ticksLeft = snapshot.ticksLeft;
+    state.playTicks = snapshot.playTicks;
     state.readyTicks = snapshot.readyTicks;
     state.lastStateAt = performance.now();
+    setTurn(snapshot.turn);
     state.cursors = snapshot.cursors;
     const readySecs = Math.ceil(state.readyTicks / TICK_RATE);
     if (state.readyTicks > 0 && readySecs !== state.lastReadySecs) playSound('ready');
@@ -949,7 +972,7 @@
   // Seconds of play so far, from the shared clock (smoothed between the host's 10 ticks a second).
   function gameElapsed() {
     const sinceTick = Math.min(state.tickMs, performance.now() - state.lastStateAt) / 1000;
-    return state.gameSeconds - (state.ticksLeft * state.tickMs) / 1000 + sinceTick;
+    return ((state.playTicks || 0) * state.tickMs) / 1000 + sinceTick;
   }
   let musicOn = false;
   function startMusic() {
@@ -965,8 +988,38 @@
     if (state.grid) state.cursors = cursors;
   });
 
+  socket.on('turnSkipped', ({ turn }) => setTurn(turn));
+
+  // Whose turn it is (turn-based mode): banner, highlighted score tag and a chime on your turn.
+  function setTurn(turn) {
+    const prev = state.turn && state.turn.id;
+    state.turn = turn || null;
+    const banner = $('turn-banner');
+    if (state.mode !== 'turns' || !turn) {
+      banner.hidden = true;
+      document.querySelectorAll('.score-tag.turn').forEach((t) => t.classList.remove('turn'));
+      return;
+    }
+    const p = playerById(turn.id);
+    const mine = turn.id === state.playerId;
+    banner.hidden = false;
+    banner.classList.toggle('mine', mine);
+    banner.style.setProperty('--turn-color', p ? p.color : '#d81b72');
+    const label = mine ? 'Your turn!' : `${p ? p.name : 'Someone'}'s turn`;
+    const text = `${label} \u00b7 turn ${turn.number} of ${turn.of}`;
+    if (banner.textContent !== text) banner.textContent = text;
+    document.querySelectorAll('.score-tag[data-slot]').forEach((tag) => {
+      tag.classList.toggle('turn', !!p && Number(tag.dataset.slot) === p.number);
+    });
+    if (turn.id !== prev) {
+      if (!mine) state.selected = null;
+      if (mine && state.playing && state.readyTicks <= 0) playSound('go');
+    }
+  }
+
   socket.on('swap', (msg) => {
     if (!state.grid) return;
+    if (msg.turn !== undefined) setTurn(msg.turn);
     queueSwap(msg);
     if (document.hidden) flushQueue();
     updateScoreboard(msg.players);
@@ -1204,6 +1257,7 @@
   }
 
   function canPlay() {
+    if (state.mode === 'turns' && (!state.turn || state.turn.id !== state.playerId)) return false;
     return state.playing && state.readyTicks <= 0 && state.ticksLeft > 0;
   }
 
@@ -1319,6 +1373,16 @@
   // ---------- Render ----------
 
   function drawTimer() {
+    if (state.mode === 'turns') {
+      // The clock shows how long the current turn has left.
+      const t = state.turn;
+      const left = t ? Math.max(0, Math.ceil(t.ticksLeft * state.tickMs / 1000)) : 0;
+      const text = `0:${String(left).padStart(2, '0')}`;
+      const el = $('timer');
+      if (el.textContent !== text) el.textContent = text;
+      el.classList.toggle('low', !!t && t.id === state.playerId && left <= 3);
+      return;
+    }
     const secs = Math.max(0, Math.ceil(state.ticksLeft * state.tickMs / 1000));
     const text = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
     const el = $('timer');
