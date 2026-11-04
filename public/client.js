@@ -1404,8 +1404,10 @@
     ctx.stroke();
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(name, tx + w / 2, ty + 9.5);
+    // Centre on the letters' measured height ('middle' sits low for this font).
+    ctx.textBaseline = 'alphabetic';
+    const m = ctx.measureText(name);
+    ctx.fillText(name, tx + w / 2, ty + 9 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2);
   }
 
   function drawCursors(now) {
