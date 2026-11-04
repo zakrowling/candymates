@@ -787,6 +787,13 @@
   $('room-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') $('join-btn').click();
   });
+  // Footer instructions for each way of playing.
+  const HOW_TO_SWAP = 'Swap two neighbouring candies (drag, or click one then the other) to line up 3 or more. Match 4 for a striped candy, an L or T for a wrapped candy and 5 for a colour bomb. Cascades multiply your points.';
+  const HINTS = {
+    free: `Everyone plays the same board at the same time. ${HOW_TO_SWAP} Highest score after 3 minutes wins.`,
+    turns: `Take turns on the same board: one swap per turn, 10 seconds a turn, 10 turns each. ${HOW_TO_SWAP} Highest score wins.`,
+  };
+
   // Free for all (everyone swaps at once) or take turns; remembered for next time.
   let chosenMode = (() => { try { return localStorage.getItem('candymates-mode') === 'turns' ? 'turns' : 'free'; } catch { return 'free'; } })();
   function showMode() {
@@ -929,6 +936,7 @@
     state.turnSeconds = payload.turnSeconds || 10;
     setTurn(payload.turn);
     document.body.classList.toggle('turn-mode', state.mode === 'turns');
+    $('game-hint').textContent = HINTS[state.mode] || HINTS.free;
     state.lastStateAt = performance.now();
     musicOn = false;
     music.stop();
