@@ -1181,7 +1181,19 @@
     state.drag = null;
   }
 
+  // Your own pointer: a mouse over the board shows your cute cursor (labelled "You") instead of
+  // the system arrow. Touch has no pointer to draw.
+  function trackMyPointer(e) {
+    if (e.pointerType === 'touch') return;
+    const rect = canvas.getBoundingClientRect();
+    state.myPointer = {
+      x: ((e.clientX - rect.left) / rect.width) * state.cols * CELL,
+      y: ((e.clientY - rect.top) / rect.height) * state.rows * CELL,
+    };
+  }
+
   canvas.addEventListener('pointerdown', (e) => {
+    trackMyPointer(e);
     if (!state.playing) return;
     const cell = cellFromEvent(e);
     if (!cell) return;
@@ -1197,6 +1209,7 @@
   });
 
   canvas.addEventListener('pointermove', (e) => {
+    trackMyPointer(e);
     if (!state.playing) return;
     const cell = cellFromEvent(e);
     if (state.drag) {
@@ -1218,7 +1231,10 @@
   const endDrag = () => { state.drag = null; };
   canvas.addEventListener('pointerup', endDrag);
   canvas.addEventListener('pointercancel', endDrag);
-  canvas.addEventListener('pointerleave', () => { if (!state.drag) sendCursor(null); });
+  canvas.addEventListener('pointerleave', () => {
+    state.myPointer = null;
+    if (!state.drag) sendCursor(null);
+  });
 
   // Keyboard: arrows move, Space/Enter picks a candy, then an arrow swaps it that way.
   const DIRS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
@@ -1595,6 +1611,12 @@
       drawPointer(pos.x, pos.y, p.color);
       nameTag(p.name, p.color, pos.x + 14, pos.y + 20);
     });
+    if (state.myPointer) {
+      const me = playerById(state.playerId);
+      const color = me ? me.color : '#d6176f';
+      drawPointer(state.myPointer.x, state.myPointer.y, color);
+      nameTag('You', color, state.myPointer.x + 14, state.myPointer.y + 20);
+    }
     drawReady(now);
   }
 
