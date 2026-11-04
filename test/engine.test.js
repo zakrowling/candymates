@@ -220,3 +220,27 @@ test('each game in a room is numbered, so everyone plays the same music for that
   room.announceJoin('late');
   assert.equal(last('gameStarted', 'late').data.round, 2, 'a mid-game joiner gets the same round');
 });
+
+test('joining mid-game drops straight in without interrupting anyone', () => {
+  const { room, run, last, sent, isRunning } = startedRoom(2);
+  room.input('p1', findGoodSwap(room.board));
+  run(50);
+  const before = { board: room.board.snapshot(), ticksLeft: room.ticksLeft, p1: room.players.get('p1').score, round: room.round };
+  const starts = sent.filter((m) => m.ev === 'gameStarted').length;
+  assert.ok(room.join('late').ok);
+  room.announceJoin('late');
+  // Only the newcomer is sent the game; nobody else's game restarts or changes.
+  const newStarts = sent.filter((m) => m.ev === 'gameStarted').slice(starts);
+  assert.deepEqual(newStarts.map((m) => m.to), ['late']);
+  assert.ok(isRunning());
+  assert.deepEqual(room.board.snapshot(), before.board);
+  assert.equal(room.ticksLeft, before.ticksLeft);
+  assert.equal(room.players.get('p1').score, before.p1);
+  assert.equal(room.round, before.round);
+  assert.equal(last('gameStarted', 'late').data.readyTicks, 0, 'no Ready? countdown for them');
+  assert.equal(last('lobbyUpdate').data.players.length, 3, 'everyone hears about the new player');
+  // And they can play right away.
+  room.input('late', findGoodSwap(room.board));
+  assert.equal(last('swap').data.by, 'late');
+  assert.ok(room.players.get('late').score > 0);
+});

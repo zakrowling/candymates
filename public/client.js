@@ -765,7 +765,12 @@
     resetToSetup();
   });
 
-  socket.on('lobbyUpdate', applyLobby);
+  socket.on('lobbyUpdate', (payload) => {
+    applyLobby(payload);
+    // Someone joining (or leaving) mid-game: show their score tag and pointer colour straight away,
+    // without interrupting the round.
+    if (state.playing) updateScoreboard(payload.players);
+  });
   socket.on('disconnect', (reason) => {
     resetToSetup();
     showError(reason || 'Disconnected.');
