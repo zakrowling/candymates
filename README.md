@@ -47,4 +47,4 @@ Every push to `main` runs the tests and publishes the `public/` folder to GitHub
 
 ## Assets
 
-Everything is drawn in code, and sound effects are synthesized; the background music is in `public/assets/audio/`. Drop an optional logo at `public/assets/image/candymates-logo.png`; see [`public/assets/README.md`](public/assets/README.md).
+Everything is drawn in code, and sound effects are synthesized; the background music is in `public/assets/audio/`. The lobby logo is `public/assets/image/Lobby/candymates-logo.png`; see [`public/assets/README.md`](public/assets/README.md).
