@@ -10,9 +10,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist+Pixel&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #6b1f5a;          /* dark plum text */
+      --ink-soft: #a0558f;
+      --pink: #ff4fa3;
+      --pink-deep: #e0237e;
+      --glass: rgba(255, 255, 255, 0.62);
+    }
     body {
-      background: #1a0b22;
-      color: #fff;
+      background: #ffd9ec;
+      color: var(--ink);
       font-family: 'Geist Pixel', 'Courier New', monospace;
       font-synthesis: none;
       display: flex;
@@ -23,64 +30,102 @@
       font-size: 14px;
       line-height: 1.8;
     }
-    /* Soft, blurred sweets-shop glow behind everything. */
+    /* Pastel strawberry-milk sky with soft glows... */
     body::before {
-      content: ''; position: fixed; inset: -60px; z-index: -1; pointer-events: none;
+      content: ''; position: fixed; inset: -60px; z-index: -2; pointer-events: none;
       background:
-        radial-gradient(circle at 12% 18%, rgba(255, 79, 163, 0.35), transparent 30%),
-        radial-gradient(circle at 85% 12%, rgba(58, 215, 255, 0.28), transparent 32%),
-        radial-gradient(circle at 78% 88%, rgba(255, 165, 58, 0.28), transparent 30%),
-        radial-gradient(circle at 18% 85%, rgba(182, 255, 58, 0.2), transparent 30%),
-        #1a0b22;
-      filter: blur(30px);
+        radial-gradient(circle at 15% 20%, rgba(255, 120, 190, 0.55), transparent 32%),
+        radial-gradient(circle at 85% 15%, rgba(190, 150, 255, 0.5), transparent 34%),
+        radial-gradient(circle at 80% 85%, rgba(255, 190, 150, 0.5), transparent 32%),
+        radial-gradient(circle at 20% 90%, rgba(150, 220, 255, 0.45), transparent 32%),
+        linear-gradient(160deg, #ffe3f1, #f6dcff 55%, #ffe8f3);
+      filter: blur(24px);
+    }
+    /* ...with little hearts and sparkles floating about. */
+    body::after {
+      content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.55;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cpath d='M40 52c-6-8-20-6-20 5 0 9 12 16 20 23 8-7 20-14 20-23 0-11-14-13-20-5z' fill='%23ffffff' opacity='.8'/%3E%3Cpath d='M160 30l4 10 10 4-10 4-4 10-4-10-10-4 10-4z' fill='%23ffffff'/%3E%3Cpath d='M150 150c-4-5-13-4-13 3 0 6 8 10 13 15 5-5 13-9 13-15 0-7-9-8-13-3z' fill='%23ff9ccf' opacity='.7'/%3E%3Cpath d='M60 170l3 7 7 3-7 3-3 7-3-7-7-3 7-3z' fill='%23d9b8ff'/%3E%3Ccircle cx='110' cy='95' r='3' fill='%23ffffff'/%3E%3Ccircle cx='200' cy='110' r='2' fill='%23ffffff'/%3E%3C/svg%3E");
+      background-size: 220px 220px;
     }
     header { text-align: center; margin-bottom: 20px; }
-    #logo { font-size: 40px; line-height: 1.2; letter-spacing: 2px; text-shadow: 3px 3px 0 #5a1240; }
-    #logo span:nth-child(6n+1) { color: #ff4f6d; }
-    #logo span:nth-child(6n+2) { color: #ffa53a; }
-    #logo span:nth-child(6n+3) { color: #ffe14f; }
-    #logo span:nth-child(6n+4) { color: #6bdc5a; }
-    #logo span:nth-child(6n+5) { color: #3ad7ff; }
-    #logo span:nth-child(6n+6) { color: #c86bff; }
-    @media (max-width: 520px) { #logo { font-size: 24px; } }
+    #logo {
+      font-size: 44px; line-height: 1.2; letter-spacing: 2px;
+      /* Glossy candy letters: white outline, a pink drop shadow and a shine. */
+      text-shadow: 0 2px 0 #fff, 0 -2px 0 #fff, 2px 0 0 #fff, -2px 0 0 #fff, 0 6px 0 #e0237e, 0 10px 18px rgba(224, 35, 126, 0.45);
+    }
+    #logo span:nth-child(6n+1) { color: #ff3d9a; }
+    #logo span:nth-child(6n+2) { color: #ff8a1f; }
+    #logo span:nth-child(6n+3) { color: #f5b800; }
+    #logo span:nth-child(6n+4) { color: #2cc28a; }
+    #logo span:nth-child(6n+5) { color: #22b8f0; }
+    #logo span:nth-child(6n+6) { color: #9b5cff; }
+    @media (max-width: 520px) { #logo { font-size: 26px; } }
     #logo-img { display: block; width: 100%; max-width: 440px; height: auto; margin: 0 auto; }
     #logo-img[hidden], #logo[hidden] { display: none; }
-    .subtitle { color: #fff; margin-top: 4px; }
+    .subtitle { color: var(--ink); margin-top: 10px; }
     /* Hide the logo while playing so the board sits at the top of the screen. */
     body.in-game header { display: none; }
     body.in-game { padding-top: 10px; }
 
+    /* Frosted glass panels. */
     .card {
-      background: #2a1033; border: 2px solid #ff8fc8; border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 236, 247, 0.65));
+      border: 3px solid #fff; border-radius: 28px;
+      box-shadow: 0 12px 40px rgba(224, 35, 126, 0.22), inset 0 2px 0 #fff, inset 0 -6px 18px rgba(255, 150, 205, 0.25);
+      backdrop-filter: blur(10px);
       padding: 24px; width: 100%; max-width: 560px; text-align: center;
     }
+    /* Glossy candy buttons: a gradient body, a white shine across the top and a juicy shadow. */
     .btn {
-      background: #ff4fa3; color: #fff; border: none; padding: 12px 20px;
+      position: relative; overflow: hidden;
+      background: linear-gradient(180deg, #ff86c4, var(--pink) 55%, var(--pink-deep));
+      color: #fff; border: none; padding: 13px 20px;
       font-family: inherit; font-size: 15px; border-radius: 999px; cursor: pointer;
       width: 100%; margin-top: 10px;
+      text-shadow: 0 1px 0 rgba(120, 0, 60, 0.35);
+      box-shadow: 0 6px 0 #c2186b, 0 10px 20px rgba(224, 35, 126, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+      transition: transform 0.08s, box-shadow 0.08s;
     }
-    .btn:hover { filter: brightness(1.1); }
-    .btn.secondary { background: #3ad7ff; color: #12051a; }
-    .btn.outline { background: transparent; color: #3ad7ff; border: 2px solid #3ad7ff; }
-    .btn.outline:hover { background: rgba(58, 215, 255, 0.1); }
-    .btn.ghost { background: transparent; color: #b48bc4; border: 1px solid #5a3368; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn::before {
+      content: ''; position: absolute; left: 8%; right: 8%; top: 3px; height: 45%;
+      border-radius: 999px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
+      pointer-events: none;
+    }
+    .btn:hover { filter: brightness(1.06); }
+    .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c2186b, 0 4px 10px rgba(224, 35, 126, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.6); }
+    .btn.secondary {
+      background: linear-gradient(180deg, #a6e4ff, #4cc3f5 55%, #1d9fd8);
+      box-shadow: 0 6px 0 #1683b5, 0 10px 20px rgba(29, 159, 216, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+    }
+    .btn.outline {
+      background: rgba(255, 255, 255, 0.7); color: var(--pink-deep); border: 2px solid var(--pink);
+      box-shadow: 0 4px 0 #ffb3d9; text-shadow: none;
+    }
+    .btn.ghost {
+      background: rgba(255, 255, 255, 0.5); color: var(--ink-soft); border: 2px solid #ffc4e2;
+      box-shadow: none; text-shadow: none;
+    }
+    .btn.outline::before, .btn.ghost::before { display: none; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
     input[type="text"] {
       width: 100%; padding: 12px; font-family: inherit; font-size: 16px; text-align: center;
-      text-transform: uppercase; background: #12051a; border: 1px solid #ff8fc8;
-      color: #ffe14f; border-radius: 999px; margin: 10px 0; letter-spacing: 6px;
+      text-transform: uppercase; background: rgba(255, 255, 255, 0.9); border: 2px solid #ffb3d9;
+      color: var(--pink-deep); border-radius: 999px; margin: 10px 0; letter-spacing: 6px;
+      box-shadow: inset 0 3px 8px rgba(224, 35, 126, 0.15);
     }
-    .or { margin: 16px 0; color: #8a6a96; }
+    input[type="text"]::placeholder { color: #ffb3d9; }
+    .or { margin: 16px 0; color: var(--ink-soft); }
     .room-display {
-      font-size: 26px; letter-spacing: 8px; color: #3ad7ff;
-      margin: 12px 0; padding: 12px; background: #12051a; border-radius: 12px;
+      font-size: 26px; letter-spacing: 8px; color: var(--pink-deep);
+      margin: 12px 0; padding: 12px; background: rgba(255, 255, 255, 0.85); border-radius: 18px;
+      box-shadow: inset 0 3px 10px rgba(224, 35, 126, 0.15);
     }
     .room-display.long { font-size: 16px; letter-spacing: 3px; }
     .share { display: flex; gap: 8px; align-items: center; }
     .share input[type="text"] {
       flex: 1; margin: 0; font-size: 13px; letter-spacing: 0; text-transform: none; text-align: left; padding: 10px 14px;
     }
-    .share .btn { width: auto; margin: 0; padding: 10px 14px; }
+    .share .btn { width: auto; margin: 0; padding: 10px 16px; }
     .share-hint { margin-bottom: 12px; font-size: 11px; }
     .room-label { margin-top: 16px; }
     #lobby-card.link-room .room-details,
@@ -88,60 +133,76 @@
     #lobby-card:not(.link-room) .link-only { display: none; }
     .player-list { list-style: none; text-align: left; margin: 15px 0; }
     .player-item {
-      padding: 8px 12px; margin: 6px 0; border-radius: 8px;
-      display: flex; justify-content: space-between;
+      padding: 8px 14px; margin: 6px 0; border-radius: 999px; background: rgba(255, 255, 255, 0.8);
+      display: flex; justify-content: space-between; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.05);
     }
     .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
     .slot {
-      background: #12051a; border: 2px dashed #4a2a58; border-radius: 14px;
+      background: rgba(255, 255, 255, 0.55); border: 2px dashed #ffb3d9; border-radius: 22px;
       padding: 10px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px;
-      min-height: 130px; justify-content: center; color: #5a3a68; font-size: 13px;
+      min-height: 130px; justify-content: center; color: #e7a6c8; font-size: 13px;
     }
-    .slot.filled { border-style: solid; }
-    .slot.you { box-shadow: 0 0 12px currentColor; }
+    .slot.filled {
+      border-style: solid; background: linear-gradient(180deg, #fff, rgba(255, 240, 248, 0.9));
+      box-shadow: inset 0 2px 0 #fff, 0 6px 14px rgba(224, 35, 126, 0.15);
+    }
+    .slot.you { box-shadow: 0 0 0 3px #fff, 0 0 18px currentColor; }
     .slot canvas { width: 64px; height: 64px; background: transparent; }
-    .slot .slot-num { color: #8a6a96; font-size: 11px; }
+    .slot .slot-num { color: var(--ink-soft); font-size: 11px; }
     .slot .slot-name { font-size: 14px; }
-    .slot .slot-tag { font-size: 10px; color: #c9a8d6; min-height: 12px; }
-    .error { color: #ff6b8a; min-height: 20px; margin-top: 10px; }
-    .hint { color: #b48bc4; margin-top: 10px; text-align: center; }
+    .slot .slot-tag { font-size: 10px; color: var(--ink-soft); min-height: 12px; }
+    .error { color: #e0234f; min-height: 20px; margin-top: 10px; }
+    .hint { color: var(--ink-soft); margin-top: 10px; text-align: center; }
 
     #game-view { display: none; flex-direction: column; align-items: center; position: relative; }
+    #game-view > .hint { max-width: 1032px; }
     /* All four scores sit above the board: P1 and P2 on the left, P3 and P4 on the right,
        with the countdown centred between them at the same size as the scores. */
     .hud {
       display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
-      width: 100%; margin-bottom: 8px;
+      width: 100%; margin-bottom: 10px;
     }
     .hud-group { display: flex; gap: 10px; }
     .hud-group.right { justify-content: flex-end; }
-    #timer { font-size: 14px; color: #fff; font-variant-numeric: tabular-nums; }
+    #timer {
+      font-size: 14px; color: var(--pink-deep); font-variant-numeric: tabular-nums;
+      background: rgba(255, 255, 255, 0.85); padding: 4px 14px; border-radius: 999px;
+      box-shadow: inset 0 2px 0 #fff, 0 3px 10px rgba(224, 35, 126, 0.2);
+    }
     /* Last 10 seconds: bright red with a pulse on every tick. */
-    #timer.low { color: #ff3b5c; }
+    #timer.low { color: #fff; background: linear-gradient(180deg, #ff6b8a, #e0234f); }
     #timer.pulse { animation: timer-pulse 0.45s ease-out; }
     @keyframes timer-pulse {
-      from { transform: scale(1.4); text-shadow: 0 0 10px rgba(255, 59, 92, 0.9); }
-      to { transform: scale(1); text-shadow: none; }
+      from { transform: scale(1.4); box-shadow: 0 0 18px rgba(224, 35, 79, 0.8); }
+      to { transform: scale(1); }
     }
+    /* Glossy score pills in each player's colour. */
     .score-tag {
-      padding: 4px 12px; border-radius: 999px; background: #2a1033; border: 2px solid currentColor;
+      position: relative; overflow: hidden;
+      padding: 5px 14px; border-radius: 999px; border: 2px solid #fff;
+      background: currentColor;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12), 0 6px 14px rgba(224, 35, 126, 0.2);
       display: flex; align-items: center; gap: 10px; white-space: nowrap;
+    }
+    .score-tag::before {
+      content: ''; position: absolute; left: 6%; right: 6%; top: 2px; height: 45%; border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0)); pointer-events: none;
     }
     .score-tag.right { flex-direction: row-reverse; }
     .score-tag.empty { visibility: hidden; }
     .score-tag.bump .tag-score { animation: score-bump 0.35s ease-out; }
     @keyframes score-bump { from { transform: scale(1.5); } to { transform: scale(1); } }
+    .score-tag .tag-name, .score-tag .tag-score { color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); position: relative; }
     .score-tag .tag-name { font-size: 11px; }
-    .score-tag .tag-score { font-size: 14px; color: #fff; display: inline-block; }
+    .score-tag .tag-score { font-size: 14px; display: inline-block; }
     canvas { display: block; }
     .board-wrap { position: relative; max-width: 100%; line-height: 0; }
-    #game-canvas { max-width: 100%; height: auto; border-radius: 18px; touch-action: none; cursor: pointer; }
+    #game-canvas { max-width: 100%; height: auto; border-radius: 30px; touch-action: none; cursor: pointer; }
 
     #game-over {
-      display: none; position: absolute; inset: 60px 0 auto 0; margin: auto;
-      width: 340px; background: rgba(26, 11, 34, 0.95);
+      display: none; position: absolute; inset: 70px 0 auto 0; margin: auto; width: 360px;
     }
-    #game-over h3 { color: #ffe14f; margin-bottom: 12px; }
+    #game-over h3 { color: var(--pink-deep); margin-bottom: 12px; font-size: 22px; text-shadow: 0 2px 0 #fff; }
   </style>
 </head>
 <body>
@@ -198,7 +259,7 @@
         <div class="score-tag right empty" data-slot="4"></div>
       </div>
     </div>
-    <div class="board-wrap"><canvas id="game-canvas" width="896" height="560"></canvas></div>
+    <div class="board-wrap"><canvas id="game-canvas" width="1032" height="645"></canvas></div>
     <p class="hint">Everyone plays the same board. Swap two neighbouring candies (drag, or click one then the other) to line up 3 or more. Match 4 for a striped candy, an L or T for a wrapped candy and 5 for a colour bomb. Cascades multiply your points. Highest score after 3 minutes wins.</p>
 
     <div id="game-over" class="card">

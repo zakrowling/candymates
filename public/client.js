@@ -2,15 +2,17 @@
   const socket = window.CandymatesNet.createNet();
   const { TICK_RATE } = window.CandymatesEngine;
 
-  const CELL = 56; // board cell size in CSS pixels
+  const CELL = 1032 / 16; // board cell size in CSS pixels: the board is as wide as the Pacmates maze (1032px)
   // Candy colours: red bean, orange drop, yellow lemon, green chew, blue gumball, purple gem.
+  // Sweet pastel-candy colours: strawberry heart, peach drop, lemon star, mint chew, blueberry
+  // gumdrop and lavender gem.
   const CANDY = [
-    { base: '#ff3b4e', light: '#ff9aa6', dark: '#a3122a' },
-    { base: '#ff9a2e', light: '#ffd29a', dark: '#b4520a' },
-    { base: '#ffd93b', light: '#fff3a8', dark: '#b88a00' },
-    { base: '#4fd65a', light: '#b4f5b0', dark: '#1d7a2a' },
-    { base: '#3aa0ff', light: '#a8d6ff', dark: '#0d4f9e' },
-    { base: '#b35cff', light: '#e2b8ff', dark: '#5e1aa6' },
+    { base: '#ff4f9a', light: '#ffc2dd', dark: '#c41768', glow: '#ffd6e9' },
+    { base: '#ff9a3d', light: '#ffd9b0', dark: '#cf5a0b', glow: '#ffe6cc' },
+    { base: '#ffd23d', light: '#fff4b8', dark: '#c99400', glow: '#fff6cf' },
+    { base: '#3fd49a', light: '#b8f5dc', dark: '#13895a', glow: '#d4fbe9' },
+    { base: '#4cb4ff', light: '#c4e6ff', dark: '#1a6fc4', glow: '#d9efff' },
+    { base: '#b06bff', light: '#e6ccff', dark: '#6a2bc4', glow: '#efe0ff' },
   ];
 
   const $ = (id) => document.getElementById(id);
@@ -183,190 +185,267 @@
   // The outline of each candy shape, centred on 0,0 at radius r.
   function candyPath(c, colour, r) {
     c.beginPath();
-    if (colour === 0) { // jelly bean
-      c.ellipse(0, 0, r, r * 0.72, -0.35, 0, Math.PI * 2);
-    } else if (colour === 1) { // round drop with a flat-ish top
-      for (let i = 0; i < 8; i++) {
-        const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
-        const rr = r * 0.95;
-        if (i === 0) c.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
-        else c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    if (colour === 0) { // heart
+      c.moveTo(0, r * 0.92);
+      c.bezierCurveTo(-r * 0.2, r * 0.7, -r * 1.02, r * 0.2, -r * 0.95, -r * 0.3);
+      c.bezierCurveTo(-r * 0.9, -r * 0.95, -r * 0.15, -r * 1.0, 0, -r * 0.42);
+      c.bezierCurveTo(r * 0.15, -r * 1.0, r * 0.9, -r * 0.95, r * 0.95, -r * 0.3);
+      c.bezierCurveTo(r * 1.02, r * 0.2, r * 0.2, r * 0.7, 0, r * 0.92);
+    } else if (colour === 1) { // round drop
+      c.arc(0, r * 0.04, r * 0.86, 0, Math.PI * 2);
+    } else if (colour === 2) { // puffy star
+      for (let i = 0; i < 5; i++) {
+        const a0 = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+        const a1 = a0 + Math.PI / 5;
+        const outer = [Math.cos(a0) * r * 0.98, Math.sin(a0) * r * 0.98 + r * 0.06];
+        const inner = [Math.cos(a1) * r * 0.5, Math.sin(a1) * r * 0.5 + r * 0.06];
+        if (i === 0) c.moveTo(...outer);
+        else c.quadraticCurveTo(Math.cos(a0 - Math.PI / 5) * r * 0.55, Math.sin(a0 - Math.PI / 5) * r * 0.55 + r * 0.06, ...outer);
+        c.quadraticCurveTo(Math.cos(a0) * r * 1.02, Math.sin(a0) * r * 1.02 + r * 0.06, ...outer);
+        c.lineTo(...inner);
       }
       c.closePath();
-    } else if (colour === 2) { // lemon drop
-      c.moveTo(0, -r);
-      c.bezierCurveTo(r * 0.95, -r * 0.55, r * 0.85, r * 0.7, 0, r);
-      c.bezierCurveTo(-r * 0.85, r * 0.7, -r * 0.95, -r * 0.55, 0, -r);
     } else if (colour === 3) { // square chew
-      roundRect(c, -r * 0.82, -r * 0.82, r * 1.64, r * 1.64, r * 0.35);
-    } else if (colour === 4) { // gumball
-      c.arc(0, 0, r * 0.88, 0, Math.PI * 2);
+      roundRect(c, -r * 0.8, -r * 0.8, r * 1.6, r * 1.6, r * 0.42);
+    } else if (colour === 4) { // gumdrop
+      c.moveTo(-r * 0.86, r * 0.7);
+      c.bezierCurveTo(-r * 0.95, -r * 0.2, -r * 0.6, -r * 0.9, 0, -r * 0.9);
+      c.bezierCurveTo(r * 0.6, -r * 0.9, r * 0.95, -r * 0.2, r * 0.86, r * 0.7);
+      c.quadraticCurveTo(0, r * 0.95, -r * 0.86, r * 0.7);
     } else { // gem
-      c.moveTo(0, -r);
-      c.quadraticCurveTo(r * 0.25, -r * 0.25, r, 0);
-      c.quadraticCurveTo(r * 0.25, r * 0.25, 0, r);
-      c.quadraticCurveTo(-r * 0.25, r * 0.25, -r, 0);
-      c.quadraticCurveTo(-r * 0.25, -r * 0.25, 0, -r);
+      c.moveTo(0, -r * 0.95);
+      c.quadraticCurveTo(r * 0.3, -r * 0.3, r * 0.92, 0);
+      c.quadraticCurveTo(r * 0.3, r * 0.3, 0, r * 0.95);
+      c.quadraticCurveTo(-r * 0.3, r * 0.3, -r * 0.92, 0);
+      c.quadraticCurveTo(-r * 0.3, -r * 0.3, 0, -r * 0.95);
     }
   }
 
-  function glossyFill(c, pal, r) {
-    const g = c.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r * 1.1);
-    g.addColorStop(0, pal.light);
-    g.addColorStop(0.45, pal.base);
-    g.addColorStop(1, pal.dark);
-    c.fillStyle = g;
+  // Jelly-candy shading inside the current path: a juicy gradient, a soft light rim along the
+  // bottom, then a big white shine and a little sparkle on top. Everything is clipped to the
+  // candy, so the gloss never spills past its edge.
+  function shine(c, pal, r, path) {
+    c.save();
+    path();
+    // Soft drop shadow under the candy.
+    c.shadowColor = 'rgba(160, 30, 100, 0.35)';
+    c.shadowBlur = r * 0.35;
+    c.shadowOffsetY = r * 0.12;
+    const body = c.createRadialGradient(-r * 0.3, -r * 0.45, r * 0.05, 0, 0, r * 1.15);
+    body.addColorStop(0, pal.light);
+    body.addColorStop(0.42, pal.base);
+    body.addColorStop(1, pal.dark);
+    c.fillStyle = body;
     c.fill();
-    c.lineWidth = Math.max(1.2, r * 0.07);
+    c.restore();
+
+    c.save();
+    path();
+    c.clip();
+    // Light coming through the jelly at the bottom.
+    const rim = c.createRadialGradient(r * 0.1, r * 1.1, r * 0.1, r * 0.1, r * 0.9, r * 0.9);
+    rim.addColorStop(0, `${pal.glow}cc`);
+    rim.addColorStop(1, `${pal.glow}00`);
+    c.fillStyle = rim;
+    c.fillRect(-r * 1.2, -r * 1.2, r * 2.4, r * 2.4);
+    // Big glossy highlight across the top.
+    const hl = c.createLinearGradient(0, -r, 0, -r * 0.05);
+    hl.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+    hl.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+    c.fillStyle = hl;
+    c.beginPath();
+    c.ellipse(-r * 0.08, -r * 0.42, r * 0.62, r * 0.36, -0.15, 0, Math.PI * 2);
+    c.fill();
+    // Bright little glint and sparkle.
+    c.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    c.beginPath();
+    c.ellipse(-r * 0.36, -r * 0.5, r * 0.13, r * 0.08, -0.6, 0, Math.PI * 2);
+    c.fill();
+    sparkle(c, r * 0.3, -r * 0.05, r * 0.09);
+    c.restore();
+
+    // Crisp darker edge.
+    c.save();
+    path();
+    c.lineWidth = Math.max(1.2, r * 0.06);
     c.strokeStyle = pal.dark;
+    c.globalAlpha = 0.7;
     c.stroke();
+    c.restore();
   }
 
-  function gloss(c, r) {
-    c.fillStyle = 'rgba(255, 255, 255, 0.55)';
+  function sparkle(c, x, y, s) {
+    c.save();
+    c.fillStyle = 'rgba(255, 255, 255, 0.95)';
     c.beginPath();
-    c.ellipse(-r * 0.3, -r * 0.42, r * 0.32, r * 0.16, -0.5, 0, Math.PI * 2);
+    c.moveTo(x, y - s * 2);
+    c.quadraticCurveTo(x + s * 0.25, y - s * 0.25, x + s * 2, y);
+    c.quadraticCurveTo(x + s * 0.25, y + s * 0.25, x, y + s * 2);
+    c.quadraticCurveTo(x - s * 0.25, y + s * 0.25, x - s * 2, y);
+    c.quadraticCurveTo(x - s * 0.25, y - s * 0.25, x, y - s * 2);
     c.fill();
+    c.restore();
   }
 
+  function heartPath(c, x, y, s) {
+    c.beginPath();
+    c.moveTo(x, y + s * 0.9);
+    c.bezierCurveTo(x - s * 1.1, y + s * 0.1, x - s * 0.8, y - s * 0.9, x, y - s * 0.35);
+    c.bezierCurveTo(x + s * 0.8, y - s * 0.9, x + s * 1.1, y + s * 0.1, x, y + s * 0.9);
+  }
+
+  // Colour bomb: a glossy chocolate truffle covered in rainbow sprinkles.
   function drawChocolateBomb(c, r) {
-    const g = c.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r);
-    g.addColorStop(0, '#9a6040');
-    g.addColorStop(0.5, '#5a3020');
-    g.addColorStop(1, '#2a140a');
-    c.fillStyle = g;
-    c.beginPath();
-    c.arc(0, 0, r * 0.9, 0, Math.PI * 2);
-    c.fill();
-    // Rainbow sprinkles.
-    const colours = ['#ff3b4e', '#ff9a2e', '#ffd93b', '#4fd65a', '#3aa0ff', '#b35cff', '#ffffff'];
-    for (let i = 0; i < 16; i++) {
+    const pal = { base: '#7a3f22', light: '#c98a5e', dark: '#3a1608', glow: '#d9a27a' };
+    const path = () => { c.beginPath(); c.arc(0, 0, r * 0.88, 0, Math.PI * 2); };
+    shine(c, pal, r, path);
+    c.save();
+    path();
+    c.clip();
+    const colours = ['#ff4f9a', '#ff9a3d', '#ffd23d', '#3fd49a', '#4cb4ff', '#b06bff', '#ffffff'];
+    for (let i = 0; i < 18; i++) {
       const a = i * 2.4;
-      const d = r * (0.2 + ((i * 37) % 10) / 15);
+      const d = r * (0.15 + ((i * 37) % 10) / 13);
       c.save();
       c.translate(Math.cos(a) * d, Math.sin(a) * d);
       c.rotate(a * 1.7);
       c.fillStyle = colours[i % colours.length];
-      roundRect(c, -r * 0.12, -r * 0.04, r * 0.24, r * 0.08, r * 0.04);
+      roundRect(c, -r * 0.13, -r * 0.045, r * 0.26, r * 0.09, r * 0.045);
       c.fill();
       c.restore();
     }
-    gloss(c, r);
+    // Shine over the sprinkles too.
+    c.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    c.beginPath();
+    c.ellipse(-r * 0.1, -r * 0.45, r * 0.55, r * 0.3, -0.15, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
   }
 
-  // Draws a candy centred at 0,0. A striped candy has bold white stripes; a wrapped candy has
-  // twisted wrapper ends; a colour bomb is a chocolate ball with sprinkles.
-  function drawCandy(c, colour, special, r, now = 0) {
+  // Draws a candy centred at 0,0. A striped candy has bold white stripes; a wrapped candy sits in
+  // a glossy wrapper with twisted ends; a colour bomb is a chocolate truffle with sprinkles.
+  function drawCandy(c, colour, special, r) {
     if (special === 'bomb') {
       drawChocolateBomb(c, r);
       return;
     }
     const pal = CANDY[colour];
     if (special === 'w') {
-      // Wrapper twists either side.
-      c.fillStyle = pal.base;
-      c.strokeStyle = pal.dark;
-      c.lineWidth = Math.max(1, r * 0.06);
+      // Wrapper twists either side, in shiny cellophane.
       [-1, 1].forEach((side) => {
-        c.beginPath();
-        c.moveTo(side * r * 0.55, 0);
-        c.lineTo(side * r * 1.05, -r * 0.5);
-        c.lineTo(side * r * 0.95, 0);
-        c.lineTo(side * r * 1.05, r * 0.5);
-        c.closePath();
+        const twist = () => {
+          c.beginPath();
+          c.moveTo(side * r * 0.55, -r * 0.12);
+          c.quadraticCurveTo(side * r * 0.85, -r * 0.65, side * r * 1.08, -r * 0.48);
+          c.quadraticCurveTo(side * r * 0.9, 0, side * r * 1.08, r * 0.48);
+          c.quadraticCurveTo(side * r * 0.85, r * 0.65, side * r * 0.55, r * 0.12);
+          c.closePath();
+        };
+        twist();
+        const g = c.createLinearGradient(0, -r * 0.6, 0, r * 0.6);
+        g.addColorStop(0, pal.light);
+        g.addColorStop(0.5, pal.base);
+        g.addColorStop(1, pal.dark);
+        c.fillStyle = g;
         c.fill();
+        c.strokeStyle = pal.dark;
+        c.lineWidth = Math.max(1, r * 0.05);
         c.stroke();
       });
+      const path = () => { c.beginPath(); c.ellipse(0, 0, r * 0.66, r * 0.6, 0, 0, Math.PI * 2); };
+      shine(c, pal, r * 0.85, path);
+      // A white ribbon band around the middle.
       c.save();
-      c.scale(0.78, 0.78);
-      candyPath(c, colour, r);
-      glossyFill(c, pal, r);
-      // Shiny cellophane band.
+      path();
       c.clip();
-      c.fillStyle = 'rgba(255, 255, 255, 0.35)';
-      c.fillRect(-r, -r * 0.15, r * 2, r * 0.3);
+      c.fillStyle = 'rgba(255, 255, 255, 0.55)';
+      c.fillRect(-r * 0.12, -r, r * 0.24, r * 2);
       c.restore();
-      gloss(c, r * 0.8);
       return;
     }
-    candyPath(c, colour, r);
-    glossyFill(c, pal, r);
+    const path = () => candyPath(c, colour, r);
+    shine(c, pal, r, path);
     if (special === 'h' || special === 'v') {
       c.save();
-      candyPath(c, colour, r);
+      path();
       c.clip();
-      c.fillStyle = 'rgba(255, 255, 255, 0.85)';
       if (special === 'v') c.rotate(Math.PI / 2);
-      for (let i = -2; i <= 2; i++) c.fillRect(-r * 1.2, i * r * 0.42 - r * 0.09, r * 2.4, r * 0.18);
+      for (let i = -2; i <= 2; i++) {
+        const y = i * r * 0.42;
+        const g = c.createLinearGradient(0, y - r * 0.1, 0, y + r * 0.1);
+        g.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+        g.addColorStop(1, 'rgba(255, 230, 245, 0.75)');
+        c.fillStyle = g;
+        c.fillRect(-r * 1.2, y - r * 0.09, r * 2.4, r * 0.18);
+      }
       c.restore();
-      candyPath(c, colour, r);
-      c.lineWidth = Math.max(1.2, r * 0.07);
-      c.strokeStyle = pal.dark;
-      c.stroke();
     }
-    gloss(c, r);
   }
 
-  // Candies are pre-drawn once at screen resolution and reused every frame.
+  // Candies are pre-drawn once at screen resolution (with room for their soft shadow) and reused.
+  const SPRITE_PAD = 1.25;
   const spriteCache = new Map();
   function candySprite(colour, special) {
     const dpr = window.devicePixelRatio || 1;
     const key = `${colour}:${special}:${dpr}`;
     if (!spriteCache.has(key)) {
-      const size = Math.ceil(CELL * dpr);
+      const box = CELL * SPRITE_PAD;
+      const size = Math.ceil(box * dpr);
       const off = document.createElement('canvas');
       off.width = size;
       off.height = size;
       const g = off.getContext('2d');
       g.scale(dpr, dpr);
-      g.translate(CELL / 2, CELL / 2);
+      g.translate(box / 2, box / 2);
       drawCandy(g, colour, special, CELL * 0.4);
       spriteCache.set(key, off);
     }
     return spriteCache.get(key);
   }
 
-  // A candy in a player's own colour, for the lobby slots.
+  // A glossy wrapped candy in a player's own colour, for the lobby slots.
   function drawPlayerCandy(c, color, cx, cy, r, now) {
     const shade = (hex, amt) => {
       const n = parseInt(hex.slice(1), 16);
       const ch = (v) => Math.max(0, Math.min(255, Math.round(v + amt * 255)));
-      return `rgb(${ch(n >> 16)}, ${ch((n >> 8) & 255)}, ${ch(n & 255)})`;
+      return `#${[ch(n >> 16), ch((n >> 8) & 255), ch(n & 255)].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
     };
-    const pal = { base: color, light: shade(color, 0.35), dark: shade(color, -0.4) };
+    const pal = { base: color, light: shade(color, 0.4), dark: shade(color, -0.3), glow: shade(color, 0.5) };
     c.save();
     c.translate(cx, cy + Math.sin(now / 300) * 3);
     c.rotate(Math.sin(now / 600) * 0.15);
-    c.fillStyle = pal.base;
-    c.strokeStyle = pal.dark;
-    c.lineWidth = 1.5;
+    drawCandyWithPalette(c, pal, r);
+    c.restore();
+  }
+
+  function drawCandyWithPalette(c, pal, r) {
     [-1, 1].forEach((side) => {
       c.beginPath();
-      c.moveTo(side * r * 0.55, 0);
-      c.lineTo(side * r * 1.15, -r * 0.55);
-      c.lineTo(side * r * 1.0, 0);
-      c.lineTo(side * r * 1.15, r * 0.55);
+      c.moveTo(side * r * 0.55, -r * 0.12);
+      c.quadraticCurveTo(side * r * 0.85, -r * 0.65, side * r * 1.1, -r * 0.5);
+      c.quadraticCurveTo(side * r * 0.92, 0, side * r * 1.1, r * 0.5);
+      c.quadraticCurveTo(side * r * 0.85, r * 0.65, side * r * 0.55, r * 0.12);
       c.closePath();
+      const g = c.createLinearGradient(0, -r * 0.6, 0, r * 0.6);
+      g.addColorStop(0, pal.light);
+      g.addColorStop(0.5, pal.base);
+      g.addColorStop(1, pal.dark);
+      c.fillStyle = g;
       c.fill();
-      c.stroke();
     });
-    c.beginPath();
-    c.arc(0, 0, r * 0.7, 0, Math.PI * 2);
-    glossyFill(c, pal, r * 0.7);
+    const path = () => { c.beginPath(); c.arc(0, 0, r * 0.66, 0, Math.PI * 2); };
+    shine(c, pal, r * 0.75, path);
     c.save();
-    c.beginPath();
-    c.arc(0, 0, r * 0.7, 0, Math.PI * 2);
+    path();
     c.clip();
-    c.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-    c.lineWidth = r * 0.14;
+    c.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    c.lineWidth = r * 0.13;
     for (let i = -2; i <= 2; i++) {
       c.beginPath();
-      c.moveTo(i * r * 0.4 - r, -r);
-      c.lineTo(i * r * 0.4 + r, r);
+      c.moveTo(i * r * 0.42 - r, -r);
+      c.lineTo(i * r * 0.42 + r, r);
       c.stroke();
     }
-    c.restore();
-    gloss(c, r * 0.7);
     c.restore();
   }
 
@@ -427,7 +506,7 @@
       if (p) {
         drawPlayerCandy(c, p.color, 32, 32, 22, now + i * 400);
       } else {
-        c.strokeStyle = '#4a2a58';
+        c.strokeStyle = '#ffb3d9';
         c.setLineDash([4, 4]);
         c.beginPath();
         c.arc(32, 32, 18, 0, Math.PI * 2);
@@ -759,11 +838,11 @@
       step.cleared.forEach((cl) => {
         sx += cl.x;
         sy += cl.y;
-        const pal = cl.c === null ? { base: '#c8864a' } : CANDY[cl.c];
+        const pal = cl.c === null ? { base: '#ff4f9a' } : CANDY[cl.c];
         for (let i = 0; i < 5; i++) {
           const a = Math.random() * Math.PI * 2;
           const sp = 1.5 + Math.random() * 3;
-          state.particles.push({ x: cl.x + 0.5, y: cl.y + 0.5, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.5, color: pal.base, born: now, life: 500 + Math.random() * 300 });
+          state.particles.push({ x: cl.x + 0.5, y: cl.y + 0.5, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.5, color: i % 2 ? '#fff' : pal.base, kind: i === 0 ? 'heart' : 'sparkle', born: now, life: 500 + Math.random() * 300 });
         }
         if (cl.s === 'h') state.beams.push({ kind: 'row', y: cl.y, start: now });
         if (cl.s === 'v') state.beams.push({ kind: 'col', x: cl.x, start: now });
@@ -772,7 +851,7 @@
       });
       const n = step.cleared.length || 1;
       state.popups.push({ text: `+${step.points}`, x: sx / n + 0.5, y: sy / n + 0.5, color, born: now, big: step.level > 1 });
-      if (step.level > 1) state.popups.push({ text: `Combo x${step.level}`, x: sx / n + 0.5, y: sy / n - 0.2, color: '#fff', born: now, small: true });
+      if (step.level > 1) state.popups.push({ text: `Combo x${step.level}`, x: sx / n + 0.5, y: sy / n - 0.2, color: '#e0237e', born: now, small: true });
       const kinds = new Set(step.cleared.map((cl) => cl.s));
       if (kinds.has('bomb')) playSound('bomb');
       else if (kinds.has('w')) playSound('wrapped');
@@ -998,17 +1077,63 @@
     }
   }
 
+  // Frosted pink glass with glossy little wells for the candies; drawn once per size and reused.
+  let boardLayer = null;
   function drawBoardBackground(w, h) {
-    ctx.fillStyle = 'rgba(42, 16, 51, 0.92)';
-    roundRect(ctx, 0, 0, w, h, 18);
-    ctx.fill();
-    for (let y = 0; y < state.rows; y++) {
-      for (let x = 0; x < state.cols; x++) {
-        ctx.fillStyle = (x + y) % 2 ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.1)';
-        roundRect(ctx, x * CELL + 2, y * CELL + 2, CELL - 4, CELL - 4, 10);
-        ctx.fill();
+    const dpr = canvas.width / w;
+    const key = `${w}x${h}@${dpr}`;
+    if (!boardLayer || boardLayer.key !== key) {
+      const off = document.createElement('canvas');
+      off.width = Math.round(w * dpr);
+      off.height = Math.round(h * dpr);
+      const g = off.getContext('2d');
+      g.scale(dpr, dpr);
+      const glass = g.createLinearGradient(0, 0, 0, h);
+      glass.addColorStop(0, 'rgba(255, 255, 255, 0.78)');
+      glass.addColorStop(1, 'rgba(255, 214, 236, 0.72)');
+      g.fillStyle = glass;
+      roundRect(g, 0, 0, w, h, 30);
+      g.fill();
+      for (let y = 0; y < state.rows; y++) {
+        for (let x = 0; x < state.cols; x++) {
+          const px = x * CELL + 3;
+          const py = y * CELL + 3;
+          const s = CELL - 6;
+          const well = g.createLinearGradient(0, py, 0, py + s);
+          if ((x + y) % 2) {
+            well.addColorStop(0, 'rgba(255, 196, 226, 0.55)');
+            well.addColorStop(1, 'rgba(255, 228, 242, 0.75)');
+          } else {
+            well.addColorStop(0, 'rgba(255, 226, 241, 0.65)');
+            well.addColorStop(1, 'rgba(255, 246, 251, 0.9)');
+          }
+          g.fillStyle = well;
+          roundRect(g, px, py, s, s, 16);
+          g.fill();
+          // Soft inner shadow at the top and a glint along the bottom edge.
+          g.strokeStyle = 'rgba(214, 90, 160, 0.18)';
+          g.lineWidth = 2;
+          roundRect(g, px + 1, py + 1, s - 2, s - 2, 15);
+          g.stroke();
+        }
       }
+      // A glossy sheen across the top of the whole board.
+      g.save();
+      roundRect(g, 0, 0, w, h, 30);
+      g.clip();
+      const sheen = g.createLinearGradient(0, 0, 0, h * 0.35);
+      sheen.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+      sheen.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      g.fillStyle = sheen;
+      g.fillRect(0, 0, w, h * 0.35);
+      g.restore();
+      g.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+      g.lineWidth = 4;
+      roundRect(g, 2, 2, w - 4, h - 4, 28);
+      g.stroke();
+      boardLayer = { key, canvas: off };
     }
+    ctx.drawImage(boardLayer.canvas, 0, 0, w, h);
   }
 
   function cellBox(x, y, inset, radius) {
@@ -1041,7 +1166,7 @@
       ctx.fillStyle = p.color;
       roundRect(ctx, tx, ty, w, 14, 7);
       ctx.fill();
-      ctx.fillStyle = '#12051a';
+      ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(p.name, tx + w / 2, ty + 7.5);
@@ -1049,7 +1174,7 @@
     const me = playerById(state.playerId);
     const myColor = me ? me.color : '#fff';
     if (state.hover && canPlay()) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.strokeStyle = 'rgba(224, 35, 126, 0.45)';
       ctx.lineWidth = 2;
       cellBox(state.hover.x, state.hover.y, 3, 10);
       ctx.stroke();
@@ -1080,12 +1205,12 @@
       if (cb) nudge.set(cb.id, [(wg.a.x - wg.b.x) * k, (wg.a.y - wg.b.y) * k]);
     });
     ctx.save();
-    roundRect(ctx, 0, 0, state.cols * CELL, state.rows * CELL, 18);
+    roundRect(ctx, 0, 0, state.cols * CELL, state.rows * CELL, 30);
     ctx.clip(); // new candies dropping in appear from the top edge
     state.sprites.forEach((sp, id) => {
       const [nx, ny] = nudge.get(id) || [0, 0];
       const img = candySprite(sp.c, sp.s);
-      const size = CELL * sp.scale;
+      const size = CELL * SPRITE_PAD * sp.scale;
       const cx = (sp.x + nx + 0.5) * CELL;
       const cy = (sp.y + ny + 0.5) * CELL;
       ctx.globalAlpha = sp.alpha;
@@ -1105,8 +1230,8 @@
       ctx.save();
       ctx.globalAlpha = 1 - t;
       ctx.fillStyle = '#fff';
-      ctx.shadowColor = '#fff';
-      ctx.shadowBlur = 20;
+      ctx.shadowColor = '#ff4f9a';
+      ctx.shadowBlur = 24;
       const thick = CELL * 0.5 * (1 - t * 0.6);
       if (b.kind === 'row') ctx.fillRect(0, (b.y + 0.5) * CELL - thick / 2, w, thick);
       else if (b.kind === 'col') ctx.fillRect((b.x + 0.5) * CELL - thick / 2, 0, thick, h);
@@ -1130,9 +1255,21 @@
       const y = (p.y + p.vy * t * 0.6 + 2.5 * t * t) * CELL;
       ctx.globalAlpha = 1 - (now - p.born) / p.life;
       ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(x, y, 3.5, 0, Math.PI * 2);
-      ctx.fill();
+      if (p.kind === 'heart') {
+        heartPath(ctx, x, y, 6);
+        ctx.fill();
+      } else {
+        ctx.save();
+        ctx.fillStyle = p.color;
+        sparkle(ctx, x, y, 2.6);
+        ctx.restore();
+        if (p.color === '#fff') {
+          ctx.fillStyle = 'rgba(255, 140, 200, 0.9)';
+          ctx.beginPath();
+          ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     });
     ctx.globalAlpha = 1;
     // Points float up in the colour of the player who scored them.
@@ -1147,7 +1284,7 @@
       const y = p.y * CELL - t * CELL * 0.8;
       ctx.globalAlpha = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
       ctx.lineWidth = 4;
-      ctx.strokeStyle = 'rgba(18, 5, 26, 0.85)';
+      ctx.strokeStyle = '#fff';
       ctx.strokeText(p.text, x, y);
       ctx.fillStyle = p.color;
       ctx.fillText(p.text, x, y);
@@ -1163,17 +1300,21 @@
     if (state.readyTicks > 0) text = `Ready? ${Math.ceil(state.readyTicks / TICK_RATE)}`;
     else if (now < state.goUntil) text = 'Go!';
     if (!text) return;
-    ctx.fillStyle = 'rgba(18, 5, 26, 0.55)';
-    roundRect(ctx, 0, 0, w, h, 18);
+    ctx.fillStyle = 'rgba(255, 214, 236, 0.6)';
+    roundRect(ctx, 0, 0, w, h, 30);
     ctx.fill();
-    ctx.font = '56px "Geist Pixel", monospace';
+    ctx.font = '64px "Geist Pixel", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = '#5a1240';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = '#fff';
     ctx.strokeText(text, w / 2, h / 2);
-    ctx.fillStyle = '#ffe14f';
+    ctx.fillStyle = '#ff3d9a';
+    ctx.shadowColor = 'rgba(224, 35, 126, 0.5)';
+    ctx.shadowBlur = 16;
     ctx.fillText(text, w / 2, h / 2);
+    ctx.shadowBlur = 0;
   }
 
   function render(now) {

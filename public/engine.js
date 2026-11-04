@@ -11,10 +11,11 @@
   const GAME_SECONDS = 180;
   const READY_SECONDS = 3; // "Ready?" countdown before the board opens
   const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I/O to avoid confusion with 1/0
-  const PLAYER_COLORS = ['#ff4fa3', '#3ad7ff', '#b6ff3a', '#ffa53a'];
+  const PLAYER_COLORS = ['#ff3d9a', '#22b8f0', '#9b5cff', '#ff8a1f'];
+  // Sweet names, 5 letters at most.
   const PLAYER_NAMES = [
-    'GUMMY', 'TAFFY', 'FUDGE', 'JELLY', 'MINTY', 'SUGAR', 'COCOA', 'TOFFEE', 'CANDY', 'BERRY',
-    'LEMON', 'CHERRY', 'PEACH', 'MAPLE', 'COOKIE', 'MUFFIN', 'TRUFFLE', 'NOUGAT', 'BONBON', 'PRALINE',
+    'GUMMY', 'TAFFY', 'FUDGE', 'JELLY', 'MINTY', 'SUGAR', 'COCOA', 'CANDY', 'BERRY', 'LEMON',
+    'PEACH', 'MAPLE', 'HONEY', 'MOCHA', 'CREAM', 'GLAZE', 'SWIRL', 'DONUT', 'TART', 'CAKE',
   ];
 
   const randInt = (n) => Math.floor(Math.random() * n);

@@ -2,7 +2,7 @@
 
 Online multiplayer match-3 for up to 4 mates, all on one shared candy board. Play it at **https://zakrowling.github.io/candymates/** or jump straight into the shared room at **https://zakrowling.github.io/candymates/mate**.
 
-- **One shared board**: everyone swaps on the same 16×10 board at the same time. Line up 3 or more matching candies to clear them; the points go to whoever made the swap, including every cascade it sets off. Grab the good moves before your mates do, or ruin their set-ups.
+- **One shared board**: everyone swaps on the same 16×10 board (as wide as the Pacmates maze) at the same time. Glossy pastel candies: strawberry hearts, peach drops, lemon stars, mint chews, blueberry gumdrops and lavender gems. Line up 3 or more matching candies to clear them; the points go to whoever made the swap, including every cascade it sets off. Grab the good moves before your mates do, or ruin their set-ups.
 - **Head to head**: highest score after 3 minutes wins. A short "Ready?" countdown starts each game, the clock turns red for the last 10 seconds with a tick every second, and a tied top score is a draw.
 - **Special candies**:
   - Match **4 in a row**: striped candy. When it's cleared it wipes out its whole row or column.
