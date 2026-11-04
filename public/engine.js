@@ -12,7 +12,8 @@
   const READY_SECONDS = 3; // "Ready?" countdown before the board opens
   const CURSOR_RELAY_MS = 50; // pointer moves are passed on up to 20 times a second
   const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I/O to avoid confusion with 1/0
-  const PLAYER_COLORS = ['#ff3d9a', '#22b8f0', '#9b5cff', '#ff8a1f'];
+  // Deep enough that white names and scores on them pass WCAG AA (4.5:1+).
+  const PLAYER_COLORS = ['#d6176f', '#0a74b8', '#7c3aed', '#b65300'];
   // Sweet names, 5 letters at most.
   const PLAYER_NAMES = [
     'GUMMY', 'TAFFY', 'FUDGE', 'JELLY', 'MINTY', 'SUGAR', 'COCOA', 'CANDY', 'BERRY', 'LEMON',

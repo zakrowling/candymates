@@ -1278,7 +1278,7 @@
       glass.addColorStop(0, 'rgba(255, 255, 255, 0.78)');
       glass.addColorStop(1, 'rgba(255, 214, 236, 0.72)');
       g.fillStyle = glass;
-      roundRect(g, 0, 0, w, h, 30);
+      roundRect(g, 0, 0, w, h, 16);
       g.fill();
       for (let y = 0; y < state.rows; y++) {
         for (let x = 0; x < state.cols; x++) {
@@ -1305,7 +1305,7 @@
       }
       // A glossy sheen across the top of the whole board.
       g.save();
-      roundRect(g, 0, 0, w, h, 30);
+      roundRect(g, 0, 0, w, h, 16);
       g.clip();
       const sheen = g.createLinearGradient(0, 0, 0, h * 0.35);
       sheen.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
@@ -1315,7 +1315,7 @@
       g.restore();
       g.strokeStyle = 'rgba(255, 255, 255, 0.95)';
       g.lineWidth = 4;
-      roundRect(g, 2, 2, w - 4, h - 4, 28);
+      roundRect(g, 2, 2, w - 4, h - 4, 14);
       g.stroke();
       boardLayer = { key, canvas: off };
     }
@@ -1331,35 +1331,42 @@
   const pointerPos = new Map();
   let lastPointerFrame = 0;
 
-  // A cute pointer: a rounded arrow in the player's colour with a white outline and a tiny heart.
+  // A cute pointer: a soft, rounded arrow in the player's colour with a white outline and a glossy shine.
   function drawPointer(x, y, color) {
+    const path = () => {
+      ctx.beginPath();
+      ctx.moveTo(1, 1);
+      ctx.quadraticCurveTo(0, 0, 0.5, 2.5);
+      ctx.lineTo(3.5, 20);
+      ctx.quadraticCurveTo(4.5, 23, 6.5, 20.5);
+      ctx.lineTo(9.5, 15.5);
+      ctx.lineTo(16, 15.5);
+      ctx.quadraticCurveTo(19.5, 15, 17, 12.5);
+      ctx.closePath();
+    };
     ctx.save();
     ctx.translate(x, y);
+    ctx.lineJoin = 'round';
     ctx.shadowColor = 'rgba(120, 20, 80, 0.35)';
     ctx.shadowBlur = 6;
     ctx.shadowOffsetY = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, 22);
-    ctx.quadraticCurveTo(1, 23.5, 2.5, 22.5);
-    ctx.lineTo(7.5, 17.5);
-    ctx.lineTo(16.5, 17);
-    ctx.quadraticCurveTo(18.5, 16.5, 17.2, 15);
-    ctx.closePath();
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 4;
+    path();
+    ctx.lineWidth = 5;
     ctx.strokeStyle = '#fff';
     ctx.stroke();
     ctx.shadowColor = 'transparent';
-    const g = ctx.createLinearGradient(0, 0, 0, 22);
-    g.addColorStop(0, '#fff');
-    g.addColorStop(0.25, color);
-    g.addColorStop(1, color);
+    path();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.save();
+    path();
+    ctx.clip();
+    const g = ctx.createLinearGradient(0, 0, 8, 12);
+    g.addColorStop(0, 'rgba(255, 255, 255, 0.75)');
+    g.addColorStop(0.6, 'rgba(255, 255, 255, 0)');
     ctx.fillStyle = g;
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    heartPath(ctx, 6.5, 11, 3);
-    ctx.fill();
+    ctx.fillRect(0, 0, 20, 24);
+    ctx.restore();
     ctx.restore();
   }
 
@@ -1460,7 +1467,7 @@
       if (cb) nudge.set(cb.id, [(wg.a.x - wg.b.x) * k, (wg.a.y - wg.b.y) * k]);
     });
     ctx.save();
-    roundRect(ctx, 0, 0, state.cols * CELL, state.rows * CELL, 30);
+    roundRect(ctx, 0, 0, state.cols * CELL, state.rows * CELL, 16);
     ctx.clip(); // new candies dropping in appear from the top edge
     state.sprites.forEach((sp, id) => {
       const [nx, ny] = nudge.get(id) || [0, 0];
@@ -1552,11 +1559,11 @@
     const w = state.cols * CELL;
     const h = state.rows * CELL;
     let text = null;
-    if (state.readyTicks > 0) text = `Ready? ♡ ${Math.ceil(state.readyTicks / TICK_RATE)}`;
-    else if (now < state.goUntil) text = 'Go! ♡';
+    if (state.readyTicks > 0) text = `Ready? ${Math.ceil(state.readyTicks / TICK_RATE)}`;
+    else if (now < state.goUntil) text = 'Go!';
     if (!text) return;
     ctx.fillStyle = 'rgba(255, 214, 236, 0.6)';
-    roundRect(ctx, 0, 0, w, h, 30);
+    roundRect(ctx, 0, 0, w, h, 16);
     ctx.fill();
     ctx.font = '500 64px "Kiwi Maru", sans-serif';
     ctx.textAlign = 'center';
