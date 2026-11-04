@@ -713,6 +713,8 @@
     renderSlots();
     const count = payload.players.length;
     $('start-btn').textContent = `Start game with ${count} player${count === 1 ? '' : 's'}`;
+    // Free for all vs take turns only matters with 2+ players; a solo game is always free for all.
+    $('mode-choice').hidden = count < 2;
     $('start-btn').style.display = 'block';
     $('room-code-txt').classList.toggle('long', payload.roomCode.length > 6);
     $('share-link').value = shareLink(payload.roomCode);
@@ -800,8 +802,9 @@
     showMode();
   }));
   showMode();
-  $('start-btn').addEventListener('click', () => socket.emit('startGame', { mode: chosenMode }));
-  $('again-btn').addEventListener('click', () => socket.emit('startGame', { mode: state.mode || chosenMode }));
+  const modeForGame = (mode) => (state.lobbyPlayers.length > 1 ? mode : 'free');
+  $('start-btn').addEventListener('click', () => socket.emit('startGame', { mode: modeForGame(chosenMode) }));
+  $('again-btn').addEventListener('click', () => socket.emit('startGame', { mode: modeForGame(state.mode || chosenMode) }));
   $('leave-btn').addEventListener('click', () => {
     socket.emit('leaveRoom');
     resetToSetup();

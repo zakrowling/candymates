@@ -298,10 +298,12 @@
     <p class="hint" id="connecting-hint" style="display:none;">Connecting...</p>
 
     <div id="room-view" style="display:none;">
+      <div id="mode-choice" hidden>
       <p class="mode-title" id="mode-title">Choose how to play</p>
       <div class="mode-picker" role="radiogroup" aria-labelledby="mode-title">
         <button type="button" class="mode-option" data-mode="free" role="radio">Free for all<small>Everyone swaps at once</small></button>
         <button type="button" class="mode-option" data-mode="turns" role="radio">Take turns<small>10 turns each, 10s a turn</small></button>
+      </div>
       </div>
       <button class="btn" id="start-btn">Start Game</button>
       <button class="btn outline link-only" id="home-btn">Create or join a new room</button>
