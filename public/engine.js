@@ -10,6 +10,7 @@
   const MAX_PLAYERS = 4;
   const GAME_SECONDS = 180;
   const READY_SECONDS = 3; // "Ready?" countdown before the board opens
+  const CURSOR_RELAY_MS = 50; // pointer moves are passed on up to 20 times a second
   const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I/O to avoid confusion with 1/0
   const PLAYER_COLORS = ['#ff3d9a', '#22b8f0', '#9b5cff', '#ff8a1f'];
   // Sweet names, 5 letters at most.
@@ -57,6 +58,9 @@
       this.readyTicks = 0;
       this.board = null;
       this.moveId = 0;
+      this.now = hooks.now || (() => Date.now());
+      this.round = 0; // games played in this room; players use it to pick that round's music
+      this.lastCursorRelay = 0;
     }
 
     get size() {
@@ -102,6 +106,7 @@
       this.ticksLeft = GAME_SECONDS * TICK_RATE;
       this.readyTicks = this.readyTicksAtStart;
       this.moveId = 0;
+      this.round += 1;
       this.started = true;
       this.players.forEach((p) => {
         p.score = 0;
@@ -115,7 +120,9 @@
 
     /**
      * Player input:
-     *   { type: 'cursor', x, y, sel } where the player is pointing (sel: they've picked that candy)
+     *   { type: 'cursor', x, y, sel, px, py } where the player is pointing: the cell (x, y), whether
+     *     they've picked that candy (sel), and optionally the exact pointer position in board cells
+     *     (px, py) so others can watch their pointer move
      *   { type: 'swap', a: {x, y, id}, b: {x, y, id} } swap two neighbouring candies. The ids must
      *     match what's there now, so a swap made on a board that has since changed is refused.
      */
@@ -123,7 +130,23 @@
       const player = this.started && this.players.get(id);
       if (!player || !msg || typeof msg !== 'object') return;
       if (msg.type === 'cursor') {
-        player.cursor = validCell(msg, this.board) ? { x: msg.x, y: msg.y, sel: msg.sel === true } : null;
+        if (!validCell(msg, this.board)) {
+          player.cursor = null;
+        } else {
+          const cursor = { x: msg.x, y: msg.y, sel: msg.sel === true };
+          const inRange = (v, max) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= max;
+          if (inRange(msg.px, this.board.cols) && inRange(msg.py, this.board.rows)) {
+            cursor.px = Math.round(msg.px * 100) / 100;
+            cursor.py = Math.round(msg.py * 100) / 100;
+          }
+          player.cursor = cursor;
+        }
+        // Pass pointer moves on straight away (a few times a second at most), so they look live.
+        const now = this.now();
+        if (now - this.lastCursorRelay >= CURSOR_RELAY_MS) {
+          this.lastCursorRelay = now;
+          this.broadcast('cursors', this.serializeCursors());
+        }
         return;
       }
       if (msg.type !== 'swap') return;
@@ -154,6 +177,10 @@
 
     // ---------- internals ----------
 
+    serializeCursors() {
+      return [...this.players.values()].map((p) => ({ id: p.id, ...(p.cursor || {}), on: !!p.cursor }));
+    }
+
     serializePlayers() {
       return [...this.players.values()].map(serializePlayer).sort((a, b) => a.number - b.number);
     }
@@ -166,6 +193,7 @@
       return {
         board: { cols: this.board.cols, rows: this.board.rows, grid: this.board.snapshot() },
         move: this.moveId,
+        round: this.round,
         tickRate: TICK_RATE,
         gameSeconds: GAME_SECONDS,
         ticksLeft: this.ticksLeft,
@@ -189,7 +217,7 @@
       this.broadcast('state', {
         ticksLeft: this.ticksLeft,
         readyTicks: this.readyTicks,
-        cursors: [...this.players.values()].map((p) => ({ id: p.id, ...(p.cursor || {}), on: !!p.cursor })),
+        cursors: this.serializeCursors(),
       });
       if (this.ticksLeft <= 0) this.endGame();
     }

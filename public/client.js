@@ -198,16 +198,22 @@
   }
 
   // ---------- Background music ----------
+  // A different track each round, in this order, then back to the first.
+  const MUSIC_TRACKS = [
+    'assets/audio/mochamusic-sugar-rush.mp3',
+    'assets/audio/mochamusic-cotton-confetti.mp3',
+    'assets/audio/mochamusic-playful-pastries.mp3',
+  ];
   // Plays quietly while a game is on. Its position follows the shared game clock (seconds since
   // play started), so every player hears the same part of the track, even if their browser only
   // lets it start after a click or key press. At the end of the track it crossfades into the
   // start again (two copies of the track overlap for a moment), so the loop feels continuous.
   const music = (() => {
-    const SRC = 'assets/audio/mochamusic-sugar-rush.mp3';
     const VOLUME = 0.2;
     const FADE = 2.5; // seconds of crossfade at the loop point (and fade in/out at start/stop)
-    const tracks = [new Audio(SRC), new Audio(SRC)];
+    const tracks = [new Audio(MUSIC_TRACKS[0]), new Audio(MUSIC_TRACKS[0])];
     tracks.forEach((t) => { t.preload = 'auto'; t.volume = 0; });
+    let source = MUSIC_TRACKS[0];
     let clock = null; // () => seconds into the game, or null when stopped
     let fadeOutFrom = 0; // when stopping: performance.now() the fade out began
     let timer = null;
@@ -262,8 +268,14 @@
     ['pointerdown', 'keydown'].forEach((ev) => window.addEventListener(ev, () => { if (clock) update(); }));
 
     return {
-      start(gameClock) {
+      // src: this round's track.
+      start(gameClock, src = source) {
         if (!state.playing) return; // only ever during a game
+        if (src !== source) {
+          halt();
+          source = src;
+          tracks.forEach((t) => { t.src = src; t.load(); });
+        }
         fadeOutFrom = 0;
         clock = gameClock;
         if (!timer) timer = setInterval(update, 100);
@@ -855,6 +867,7 @@
     state.ticksLeft = payload.ticksLeft;
     state.readyTicks = payload.readyTicks;
     state.gameSeconds = payload.gameSeconds;
+    state.round = payload.round;
     state.lastStateAt = performance.now();
     musicOn = false;
     music.stop();
@@ -905,8 +918,15 @@
   function startMusic() {
     if (musicOn) return;
     musicOn = true;
-    music.start(gameElapsed);
+    // Round 1 plays the first track, round 2 the second, and so on, looping back to the first.
+    const round = Math.max(1, state.round || 1);
+    music.start(gameElapsed, MUSIC_TRACKS[(round - 1) % MUSIC_TRACKS.length]);
   }
+
+  // Live pointer moves from the host (more often than the regular state updates).
+  socket.on('cursors', (cursors) => {
+    if (state.grid) state.cursors = cursors;
+  });
 
   socket.on('swap', (msg) => {
     if (!state.grid) return;
@@ -1112,12 +1132,15 @@
 
   // ---------- Controls ----------
 
+  // The cell under the pointer, plus its exact position in board cells (px, py).
   function cellFromEvent(e) {
     const rect = canvas.getBoundingClientRect();
-    const x = Math.floor(((e.clientX - rect.left) / rect.width) * state.cols);
-    const y = Math.floor(((e.clientY - rect.top) / rect.height) * state.rows);
+    const px = ((e.clientX - rect.left) / rect.width) * state.cols;
+    const py = ((e.clientY - rect.top) / rect.height) * state.rows;
+    const x = Math.floor(px);
+    const y = Math.floor(py);
     if (x < 0 || y < 0 || x >= state.cols || y >= state.rows) return null;
-    return { x, y };
+    return { x, y, px, py };
   }
 
   let lastCursorSent = 0;
@@ -1127,11 +1150,18 @@
       lastCursorSent = performance.now();
       cursorTimer = null;
       const c = state.hover;
-      socket.emit('input', c ? { type: 'cursor', x: c.x, y: c.y, sel: !!state.selected && state.selected.x === c.x && state.selected.y === c.y } : { type: 'cursor' });
+      if (!c) return socket.emit('input', { type: 'cursor' });
+      const msg = { type: 'cursor', x: c.x, y: c.y, sel: !!state.selected && state.selected.x === c.x && state.selected.y === c.y };
+      if (c.px !== undefined) {
+        msg.px = c.px;
+        msg.py = c.py;
+      }
+      socket.emit('input', msg);
     };
     state.hover = cell;
     if (cursorTimer) return;
-    const wait = 80 - (performance.now() - lastCursorSent);
+    // Up to 20 updates a second, so other players can watch your pointer move.
+    const wait = 50 - (performance.now() - lastCursorSent);
     if (wait <= 0) send();
     else cursorTimer = setTimeout(send, wait);
   }
@@ -1182,7 +1212,7 @@
         state.drag = null;
       }
     }
-    if (!cell || !state.hover || cell.x !== state.hover.x || cell.y !== state.hover.y) sendCursor(cell);
+    sendCursor(cell);
   });
 
   const endDrag = () => { state.drag = null; };
@@ -1296,12 +1326,79 @@
     roundRect(ctx, x * CELL + inset, y * CELL + inset, CELL - inset * 2, CELL - inset * 2, radius);
   }
 
+  // Other players' pointers glide towards their latest position, so they move smoothly even
+  // though updates only arrive a few times a second.
+  const pointerPos = new Map();
+  let lastPointerFrame = 0;
+
+  // A cute pointer: a rounded arrow in the player's colour with a white outline and a tiny heart.
+  function drawPointer(x, y, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.shadowColor = 'rgba(120, 20, 80, 0.35)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, 22);
+    ctx.quadraticCurveTo(1, 23.5, 2.5, 22.5);
+    ctx.lineTo(7.5, 17.5);
+    ctx.lineTo(16.5, 17);
+    ctx.quadraticCurveTo(18.5, 16.5, 17.2, 15);
+    ctx.closePath();
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+    ctx.shadowColor = 'transparent';
+    const g = ctx.createLinearGradient(0, 0, 0, 22);
+    g.addColorStop(0, '#fff');
+    g.addColorStop(0.25, color);
+    g.addColorStop(1, color);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    heartPath(ctx, 6.5, 11, 3);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function nameTag(name, color, x, y) {
+    ctx.font = '500 11px "Kiwi Maru", sans-serif';
+    const w = ctx.measureText(name).width + 14;
+    const tx = Math.max(0, Math.min(state.cols * CELL - w, x));
+    const ty = Math.max(0, Math.min(state.rows * CELL - 18, y));
+    ctx.save();
+    ctx.shadowColor = 'rgba(120, 20, 80, 0.3)';
+    ctx.shadowBlur = 5;
+    ctx.fillStyle = color;
+    roundRect(ctx, tx, ty, w, 18, 9);
+    ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    roundRect(ctx, tx, ty, w, 18, 9);
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name, tx + w / 2, ty + 9.5);
+  }
+
   function drawCursors(now) {
-    // Other players: their colour around the candy they're on (filled glow once they've picked it).
+    const dt = Math.min(100, now - (lastPointerFrame || now));
+    lastPointerFrame = now;
+    const ease = 1 - Math.exp(-dt / 55);
+    const pointers = [];
+    // Other players: their colour around the candy they're on (filled glow once they've picked it),
+    // and their pointer gliding over the board.
     state.cursors.forEach((cur) => {
-      if (!cur.on || cur.id === state.playerId) return;
+      if (cur.id === state.playerId) return;
       const p = playerById(cur.id);
-      if (!p) return;
+      if (!p || !cur.on) {
+        pointerPos.delete(cur.id);
+        return;
+      }
       ctx.save();
       ctx.strokeStyle = p.color;
       ctx.lineWidth = 3;
@@ -1314,19 +1411,21 @@
         ctx.fill();
       }
       ctx.restore();
-      // Name tag above the cell.
-      ctx.font = '500 11px "Kiwi Maru", sans-serif';
-      const w = ctx.measureText(p.name).width + 10;
-      const tx = Math.max(0, Math.min(state.cols * CELL - w, cur.x * CELL + CELL / 2 - w / 2));
-      const ty = Math.max(0, cur.y * CELL - 8);
-      ctx.fillStyle = p.color;
-      roundRect(ctx, tx, ty, w, 14, 7);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(p.name, tx + w / 2, ty + 7.5);
+      if (cur.px === undefined) {
+        // No pointer position (e.g. playing with the keyboard): just a name tag above the candy.
+        pointerPos.delete(cur.id);
+        nameTag(p.name, p.color, cur.x * CELL + CELL / 2 - 20, cur.y * CELL - 9);
+        return;
+      }
+      const target = { x: cur.px * CELL, y: cur.py * CELL };
+      const pos = pointerPos.get(cur.id) || { ...target };
+      pos.x += (target.x - pos.x) * ease;
+      pos.y += (target.y - pos.y) * ease;
+      pointerPos.set(cur.id, pos);
+      pointers.push([p, pos]);
     });
+    // Pointers are drawn after the candies (see render) so they float on top.
+    state.pointerDraws = pointers;
     const me = playerById(state.playerId);
     const myColor = me ? me.color : '#fff';
     if (state.hover && canPlay()) {
@@ -1485,11 +1584,15 @@
     drawCursors(now);
     drawCandies(now);
     drawEffects(now);
+    (state.pointerDraws || []).forEach(([p, pos]) => {
+      drawPointer(pos.x, pos.y, p.color);
+      nameTag(p.name, p.color, pos.x + 14, pos.y + 20);
+    });
     drawReady(now);
   }
 
   // Debug aid: ?debug exposes the client state (and a way to skip to the end of the animations).
-  if (new URLSearchParams(location.search).has('debug')) window.__candymatesDebug = { state, flushQueue, music };
+  if (new URLSearchParams(location.search).has('debug')) window.__candymatesDebug = { state, flushQueue, music, render };
 
   buildSlots();
   renderSlots();

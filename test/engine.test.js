@@ -17,6 +17,7 @@ function seeded(seed) {
 function makeRoom({ readySeconds = 0 } = {}) {
   const sent = [];
   let tickFn = null;
+  let clock = 0;
   const room = new GameRoom('TEST', {
     broadcast: (ev, data) => sent.push({ to: '*', ev, data }),
     send: (to, ev, data) => sent.push({ to, ev, data }),
@@ -24,10 +25,12 @@ function makeRoom({ readySeconds = 0 } = {}) {
     clearInterval: () => { tickFn = null; },
     random: seeded(9),
     readySeconds,
+    now: () => clock,
   });
+  const advance = (ms) => { clock += ms; };
   const run = (n = 1) => { for (let i = 0; i < n && tickFn; i++) tickFn(); };
   const last = (ev, to) => [...sent].reverse().find((m) => m.ev === ev && (!to || m.to === to));
-  return { room, sent, run, last, isRunning: () => tickFn !== null };
+  return { room, sent, run, last, advance, isRunning: () => tickFn !== null };
 }
 
 function startedRoom(players = 2, opts) {
@@ -183,4 +186,37 @@ test('playing again starts a fresh board and resets scores', () => {
   assert.ok(room.start('p2'));
   assert.notEqual(room.board, oldBoard);
   assert.equal(room.players.get('p1').score, 0);
+});
+
+test('pointer movements are passed on straight away, but not too often', () => {
+  const { room, sent, advance } = startedRoom(2);
+  const relays = () => sent.filter((m) => m.ev === 'cursors');
+  advance(1000);
+  room.input('p1', { type: 'cursor', x: 2, y: 3, px: 2.456, py: 3.5 });
+  assert.equal(relays().length, 1);
+  assert.deepEqual(relays()[0].data.find((c) => c.id === 'p1'), { id: 'p1', x: 2, y: 3, sel: false, px: 2.46, py: 3.5, on: true });
+  // A burst of moves within 50ms only goes out once; the latest position is sent next time.
+  advance(10);
+  room.input('p1', { type: 'cursor', x: 2, y: 3, px: 2.8, py: 3.6 });
+  assert.equal(relays().length, 1);
+  advance(60);
+  room.input('p1', { type: 'cursor', x: 3, y: 3, px: 3.1, py: 3.6 });
+  assert.equal(relays().length, 2);
+  // Positions off the board are dropped (the cell still counts).
+  advance(60);
+  room.input('p2', { type: 'cursor', x: 1, y: 1, px: 99, py: -4 });
+  const p2 = relays().at(-1).data.find((c) => c.id === 'p2');
+  assert.equal(p2.px, undefined);
+  assert.equal(p2.x, 1);
+});
+
+test('each game in a room is numbered, so everyone plays the same music for that round', () => {
+  const { room, run, last } = startedRoom(1);
+  assert.equal(last('gameStarted').data.round, 1);
+  run(GAME_SECONDS * TICK_RATE);
+  room.start('p1');
+  assert.equal(last('gameStarted').data.round, 2);
+  room.join('late');
+  room.announceJoin('late');
+  assert.equal(last('gameStarted', 'late').data.round, 2, 'a mid-game joiner gets the same round');
 });

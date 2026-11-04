@@ -4,7 +4,9 @@ Candymates draws everything itself (candies, effects and the board are drawn on 
 
 | Path | Used for |
 |------|----------|
-| `audio/mochamusic-sugar-rush.mp3` | Background music during play (quiet, crossfaded loop) |
+| `audio/mochamusic-sugar-rush.mp3` | Background music, rounds 1, 4, 7… (quiet, crossfaded loop) |
+| `audio/mochamusic-cotton-confetti.mp3` | Background music, rounds 2, 5, 8… |
+| `audio/mochamusic-playful-pastries.mp3` | Background music, rounds 3, 6, 9… |
 | `image/candymates-logo.png` | Optional lobby title logo. Until it exists, a colourful text title is shown. |
 
 The UI font is [Kiwi Maru](https://fonts.google.com/specimen/Kiwi+Maru), loaded from Google Fonts.
