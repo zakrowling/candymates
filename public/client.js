@@ -1615,7 +1615,7 @@
       const me = playerById(state.playerId);
       const color = me ? me.color : '#d6176f';
       drawPointer(state.myPointer.x, state.myPointer.y, color);
-      nameTag('You', color, state.myPointer.x + 14, state.myPointer.y + 20);
+      nameTag('YOU', color, state.myPointer.x + 14, state.myPointer.y + 20);
     }
     drawReady(now);
   }
