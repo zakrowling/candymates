@@ -7,12 +7,12 @@
   // Sweet pastel-candy colours: strawberry heart, peach drop, lemon star, mint chew, blueberry
   // gumdrop and lavender gem.
   const CANDY = [
-    { base: '#ff4f9a', light: '#ffc2dd', dark: '#c41768', glow: '#ffd6e9' },
-    { base: '#ff9a3d', light: '#ffd9b0', dark: '#cf5a0b', glow: '#ffe6cc' },
-    { base: '#ffd23d', light: '#fff4b8', dark: '#c99400', glow: '#fff6cf' },
-    { base: '#3fd49a', light: '#b8f5dc', dark: '#13895a', glow: '#d4fbe9' },
-    { base: '#4cb4ff', light: '#c4e6ff', dark: '#1a6fc4', glow: '#d9efff' },
-    { base: '#b06bff', light: '#e6ccff', dark: '#6a2bc4', glow: '#efe0ff' },
+    { base: '#ff2f86', light: '#ffb3d4', dark: '#a80f55', glow: '#ffd0e4' },
+    { base: '#ff8a1f', light: '#ffd3a3', dark: '#b84a00', glow: '#ffe1bd' },
+    { base: '#ffcc1a', light: '#fff1a3', dark: '#b58200', glow: '#fff4c2' },
+    { base: '#22c98a', light: '#a9f2d4', dark: '#0b7a4c', glow: '#c9f9e4' },
+    { base: '#2e9dff', light: '#b3dcff', dark: '#1259b0', glow: '#cfe8ff' },
+    { base: '#a14dff', light: '#dcbcff', dark: '#5a1fb0', glow: '#e9d8ff' },
   ];
 
   const $ = (id) => document.getElementById(id);
@@ -170,6 +170,84 @@
     SFX[key](ac, arg);
   }
 
+  // ---------- Background music ----------
+  // Plays quietly while a game is on. Its position follows the shared game clock (seconds since
+  // play started), so every player hears the same part of the track, even if their browser only
+  // lets it start after a click or key press. At the end of the track it crossfades into the
+  // start again (two copies of the track overlap for a moment), so the loop feels continuous.
+  const music = (() => {
+    const SRC = 'assets/audio/mochamusic-sugar-rush.mp3';
+    const VOLUME = 0.2;
+    const FADE = 2.5; // seconds of crossfade at the loop point (and fade in/out at start/stop)
+    const tracks = [new Audio(SRC), new Audio(SRC)];
+    tracks.forEach((t) => { t.preload = 'auto'; t.volume = 0; });
+    let clock = null; // () => seconds into the game, or null when stopped
+    let fadeOutFrom = 0; // when stopping: performance.now() the fade out began
+    let timer = null;
+
+    const play = (t) => { if (t.paused) t.play().catch(() => {}); };
+    const seek = (t, at) => { if (Math.abs(t.currentTime - at) > 0.3) t.currentTime = at; };
+
+    function update() {
+      const duration = tracks[0].duration;
+      if (fadeOutFrom) {
+        const k = 1 - (performance.now() - fadeOutFrom) / (FADE * 1000);
+        tracks.forEach((t) => { t.volume = Math.max(0, t.volume * Math.max(0, k)); });
+        if (k <= 0) halt();
+        return;
+      }
+      if (!clock) return;
+      const elapsed = Math.max(0, clock());
+      if (!(duration > FADE * 2)) {
+        // Length not known yet: just start playing; the loop maths takes over once it's loaded.
+        play(tracks[0]);
+        tracks[0].volume = VOLUME * Math.min(1, elapsed / FADE);
+        return;
+      }
+      const period = duration - FADE; // each loop starts as the previous one begins to fade
+      const loop = Math.floor(elapsed / period);
+      const at = elapsed - loop * period;
+      const cur = tracks[loop % 2];
+      const prev = tracks[(loop + 1) % 2];
+      play(cur);
+      seek(cur, at);
+      cur.volume = VOLUME * Math.min(1, at / FADE);
+      if (loop > 0 && at < FADE) {
+        // The previous loop's tail fading out underneath.
+        play(prev);
+        seek(prev, at + period);
+        prev.volume = VOLUME * (1 - at / FADE);
+      } else if (!prev.paused) {
+        prev.pause();
+      }
+    }
+
+    function halt() {
+      clearInterval(timer);
+      timer = null;
+      clock = null;
+      fadeOutFrom = 0;
+      tracks.forEach((t) => { t.pause(); t.volume = 0; });
+    }
+
+    // If autoplay was blocked, the next click or key press starts it (in the right place).
+    ['pointerdown', 'keydown'].forEach((ev) => window.addEventListener(ev, () => { if (clock) update(); }));
+
+    return {
+      start(gameClock) {
+        fadeOutFrom = 0;
+        clock = gameClock;
+        if (!timer) timer = setInterval(update, 100);
+        update();
+      },
+      // Gentle fade out (game over).
+      fadeOut() {
+        if (clock && !fadeOutFrom) fadeOutFrom = performance.now();
+      },
+      stop: halt,
+    };
+  })();
+
   // ---------- Candy drawing ----------
 
   function roundRect(c, x, y, w, h, r) {
@@ -221,19 +299,22 @@
     }
   }
 
-  // Jelly-candy shading inside the current path: a juicy gradient, a soft light rim along the
-  // bottom, then a big white shine and a little sparkle on top. Everything is clipped to the
-  // candy, so the gloss never spills past its edge.
+  // Boiled-sweet / jelly shading for the current path, clipped to the candy so nothing spills
+  // past its edge:
+  //  - a juicy body gradient, lit from the top left, darker and richer towards the edge;
+  //  - light glowing through the translucent candy at the bottom;
+  //  - a glassy rim of light along the top edge;
+  //  - a big soft shine, a crisp little glint and a sparkle.
   function shine(c, pal, r, path) {
     c.save();
     path();
-    // Soft drop shadow under the candy.
-    c.shadowColor = 'rgba(160, 30, 100, 0.35)';
-    c.shadowBlur = r * 0.35;
-    c.shadowOffsetY = r * 0.12;
-    const body = c.createRadialGradient(-r * 0.3, -r * 0.45, r * 0.05, 0, 0, r * 1.15);
+    c.shadowColor = 'rgba(150, 25, 95, 0.38)';
+    c.shadowBlur = r * 0.4;
+    c.shadowOffsetY = r * 0.14;
+    const body = c.createRadialGradient(-r * 0.32, -r * 0.42, r * 0.04, 0, r * 0.05, r * 1.1);
     body.addColorStop(0, pal.light);
-    body.addColorStop(0.42, pal.base);
+    body.addColorStop(0.35, pal.base);
+    body.addColorStop(0.8, pal.dark);
     body.addColorStop(1, pal.dark);
     c.fillStyle = body;
     c.fill();
@@ -242,34 +323,52 @@
     c.save();
     path();
     c.clip();
-    // Light coming through the jelly at the bottom.
-    const rim = c.createRadialGradient(r * 0.1, r * 1.1, r * 0.1, r * 0.1, r * 0.9, r * 0.9);
-    rim.addColorStop(0, `${pal.glow}cc`);
-    rim.addColorStop(1, `${pal.glow}00`);
-    c.fillStyle = rim;
-    c.fillRect(-r * 1.2, -r * 1.2, r * 2.4, r * 2.4);
-    // Big glossy highlight across the top.
-    const hl = c.createLinearGradient(0, -r, 0, -r * 0.05);
-    hl.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
-    hl.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+    // Translucent glow: light passing through the sweet and out of its lower half.
+    const glow = c.createRadialGradient(r * 0.12, r * 0.62, r * 0.05, r * 0.12, r * 0.55, r * 0.75);
+    glow.addColorStop(0, `${pal.glow}e6`);
+    glow.addColorStop(0.5, `${pal.light}66`);
+    glow.addColorStop(1, `${pal.light}00`);
+    c.fillStyle = glow;
+    c.fillRect(-r * 1.3, -r * 1.3, r * 2.6, r * 2.6);
+    // Depth: the colour gets richer near the edge, like looking through thicker candy.
+    const depth = c.createRadialGradient(0, 0, r * 0.55, 0, 0, r * 1.05);
+    depth.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    depth.addColorStop(1, `${pal.dark}88`);
+    c.fillStyle = depth;
+    c.fillRect(-r * 1.3, -r * 1.3, r * 2.6, r * 2.6);
+    // Glassy rim light along the top edge.
+    const rim = c.createLinearGradient(0, -r, 0, r * 0.2);
+    rim.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+    rim.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    c.strokeStyle = rim;
+    c.lineWidth = r * 0.16;
+    path();
+    c.stroke();
+    // Big soft shine.
+    const hl = c.createLinearGradient(0, -r * 0.95, 0, -r * 0.1);
+    hl.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+    hl.addColorStop(1, 'rgba(255, 255, 255, 0)');
     c.fillStyle = hl;
     c.beginPath();
-    c.ellipse(-r * 0.08, -r * 0.42, r * 0.62, r * 0.36, -0.15, 0, Math.PI * 2);
+    c.ellipse(-r * 0.1, -r * 0.45, r * 0.58, r * 0.32, -0.2, 0, Math.PI * 2);
     c.fill();
-    // Bright little glint and sparkle.
-    c.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    // Crisp glint, a dot beside it, and a sparkle on the lit side.
+    c.fillStyle = '#fff';
     c.beginPath();
-    c.ellipse(-r * 0.36, -r * 0.5, r * 0.13, r * 0.08, -0.6, 0, Math.PI * 2);
+    c.ellipse(-r * 0.38, -r * 0.48, r * 0.14, r * 0.075, -0.65, 0, Math.PI * 2);
     c.fill();
-    sparkle(c, r * 0.3, -r * 0.05, r * 0.09);
+    c.beginPath();
+    c.arc(-r * 0.16, -r * 0.6, r * 0.045, 0, Math.PI * 2);
+    c.fill();
+    sparkle(c, r * 0.36, -r * 0.08, r * 0.08);
     c.restore();
 
-    // Crisp darker edge.
+    // Fine darker outline so each sweet stands out from its neighbours.
     c.save();
     path();
-    c.lineWidth = Math.max(1.2, r * 0.06);
+    c.lineWidth = Math.max(1, r * 0.05);
     c.strokeStyle = pal.dark;
-    c.globalAlpha = 0.7;
+    c.globalAlpha = 0.85;
     c.stroke();
     c.restore();
   }
@@ -549,6 +648,8 @@
 
   function showLobby() {
     state.playing = false;
+    musicOn = false;
+    music.stop();
     state.selected = null;
     $('game-view').style.display = 'none';
     $('game-over').style.display = 'none';
@@ -724,6 +825,10 @@
     state.tickMs = 1000 / payload.tickRate;
     state.ticksLeft = payload.ticksLeft;
     state.readyTicks = payload.readyTicks;
+    state.gameSeconds = payload.gameSeconds;
+    state.lastStateAt = performance.now();
+    musicOn = false;
+    music.stop();
     state.lastTimerSecs = undefined;
     state.lastReadySecs = undefined;
     state.popups = [];
@@ -750,6 +855,7 @@
     const wasReady = state.readyTicks > 0;
     state.ticksLeft = snapshot.ticksLeft;
     state.readyTicks = snapshot.readyTicks;
+    state.lastStateAt = performance.now();
     state.cursors = snapshot.cursors;
     const readySecs = Math.ceil(state.readyTicks / TICK_RATE);
     if (state.readyTicks > 0 && readySecs !== state.lastReadySecs) playSound('ready');
@@ -758,7 +864,20 @@
       state.goUntil = performance.now() + 700;
       playSound('go');
     }
+    if (state.readyTicks === 0 && state.ticksLeft > 0 && state.playing) startMusic();
   });
+
+  // Seconds of play so far, from the shared clock (smoothed between the host's 10 ticks a second).
+  function gameElapsed() {
+    const sinceTick = Math.min(state.tickMs, performance.now() - state.lastStateAt) / 1000;
+    return state.gameSeconds - (state.ticksLeft * state.tickMs) / 1000 + sinceTick;
+  }
+  let musicOn = false;
+  function startMusic() {
+    if (musicOn) return;
+    musicOn = true;
+    music.start(gameElapsed);
+  }
 
   socket.on('swap', (msg) => {
     if (!state.grid) return;
@@ -784,6 +903,8 @@
     renderPlayerList($('standings'), standings, (p) => `${p.score}`);
     $('game-over').style.display = 'block';
     playSound('end');
+    musicOn = false;
+    music.fadeOut();
   });
 
   // ---------- Animation queue ----------
@@ -1333,7 +1454,7 @@
   }
 
   // Debug aid: ?debug exposes the client state (and a way to skip to the end of the animations).
-  if (new URLSearchParams(location.search).has('debug')) window.__candymatesDebug = { state, flushQueue };
+  if (new URLSearchParams(location.search).has('debug')) window.__candymatesDebug = { state, flushQueue, music };
 
   buildSlots();
   renderSlots();

@@ -2,7 +2,7 @@
 
 Online multiplayer match-3 for up to 4 mates, all on one shared candy board. Play it at **https://zakrowling.github.io/candymates/** or jump straight into the shared room at **https://zakrowling.github.io/candymates/mate**.
 
-- **One shared board**: everyone swaps on the same 16×10 board (as wide as the Pacmates maze) at the same time. Glossy pastel candies: strawberry hearts, peach drops, lemon stars, mint chews, blueberry gumdrops and lavender gems. Line up 3 or more matching candies to clear them; the points go to whoever made the swap, including every cascade it sets off. Grab the good moves before your mates do, or ruin their set-ups.
+- **One shared board**: everyone swaps on the same 16×10 board (as wide as the Pacmates maze) at the same time. Glossy boiled-sweet candies: strawberry hearts, peach drops, lemon stars, mint chews, blueberry gumdrops and lavender gems. Buttons, scores and the clock are little wrapped sweets. Line up 3 or more matching candies to clear them; the points go to whoever made the swap, including every cascade it sets off. Grab the good moves before your mates do, or ruin their set-ups.
 - **Head to head**: highest score after 3 minutes wins. A short "Ready?" countdown starts each game, the clock turns red for the last 10 seconds with a tick every second, and a tied top score is a draw.
 - **Special candies**:
   - Match **4 in a row**: striped candy. When it's cleared it wipes out its whole row or column.
@@ -14,7 +14,7 @@ Online multiplayer match-3 for up to 4 mates, all on one shared candy board. Pla
 - **Controls**: drag a candy onto a neighbour, or click one candy then a neighbour. Works with touch too. Keyboard: arrows to move, Space or Enter to pick a candy, then an arrow to swap it that way.
 - **Room codes**: create a room and share the 4-letter code (e.g. `WFTF`) or the invite link. Friends can join a game that's already running.
 - **Link rooms**: share a link like https://zakrowling.github.io/candymates/mate and nobody needs a code. The first person to open it hosts and everyone else joins. If the host leaves, the next player takes over hosting, so the room stays open while anyone is in it. Any 2–16 letters, numbers or dashes work as a room name.
-- **Sound**: all synthesized with Web Audio: bubbly pops that climb a scale with each cascade, zaps for striped candies, booms for wrapped ones, a sparkle for colour bombs, and countdown ticks.
+- **Sound**: a background track ([`public/assets/audio/mochamusic-sugar-rush.mp3`](public/assets/audio/mochamusic-sugar-rush.mp3)) plays quietly during play. It follows the shared game clock so every player hears the same part, fades in and out, and crossfades into itself at the end so the loop feels continuous. Effects are synthesized with Web Audio: bubbly pops that climb a scale with each cascade, zaps for striped candies, booms for wrapped ones, a sparkle for colour bombs, and countdown ticks.
 
 ## How it works
 
@@ -47,4 +47,4 @@ Every push to `main` runs the tests and publishes the `public/` folder to GitHub
 
 ## Assets
 
-Everything is drawn and synthesized in code. Drop an optional logo at `public/assets/image/candymates-logo.png`; see [`public/assets/README.md`](public/assets/README.md).
+Everything is drawn in code, and sound effects are synthesized; the background music is in `public/assets/audio/`. Drop an optional logo at `public/assets/image/candymates-logo.png`; see [`public/assets/README.md`](public/assets/README.md).

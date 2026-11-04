@@ -75,37 +75,39 @@
       backdrop-filter: blur(10px);
       padding: 24px; width: 100%; max-width: 560px; text-align: center;
     }
-    /* Glossy candy buttons: a gradient body, a white shine across the top and a juicy shadow. */
+    /* Buttons are wrapped sweets: a glossy candy body with twisted, pleated wrapper ends either side.
+       --c1/--c2/--c3 are the light, mid and dark shades of each sweet. */
     .btn {
-      position: relative; overflow: hidden;
-      background: linear-gradient(180deg, #ff86c4, var(--pink) 55%, var(--pink-deep));
+      --c1: #ff9ccd; --c2: var(--pink); --c3: var(--pink-deep); --edge: #c2186b;
+      position: relative; display: block;
+      width: calc(100% - 56px); margin: 12px auto 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0, rgba(255, 255, 255, 0.15) 42%, rgba(255, 255, 255, 0) 50%),
+        linear-gradient(180deg, var(--c1), var(--c2) 55%, var(--c3));
       color: #fff; border: none; padding: 13px 20px;
       font-family: inherit; font-size: 15px; border-radius: 999px; cursor: pointer;
-      width: 100%; margin-top: 10px;
       text-shadow: 0 1px 0 rgba(120, 0, 60, 0.35);
-      box-shadow: 0 6px 0 #c2186b, 0 10px 20px rgba(224, 35, 126, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+      box-shadow: 0 5px 0 var(--edge), 0 10px 18px rgba(224, 35, 126, 0.3), inset 0 -4px 8px rgba(0, 0, 0, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.7);
       transition: transform 0.08s, box-shadow 0.08s;
     }
-    .btn::before {
-      content: ''; position: absolute; left: 8%; right: 8%; top: 3px; height: 45%;
-      border-radius: 999px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
-      pointer-events: none;
+    .btn::before, .btn::after {
+      content: ''; position: absolute; top: 12%; width: 30px; height: 76%; pointer-events: none;
+      background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0 2px, rgba(255, 255, 255, 0) 2px 6px),
+        linear-gradient(180deg, var(--c1), var(--c2) 50%, var(--c3));
+      filter: drop-shadow(0 3px 0 var(--edge));
     }
+    .btn::before { left: -26px; clip-path: polygon(100% 38%, 0 0, 22% 25%, 0 50%, 22% 75%, 0 100%, 100% 62%); }
+    .btn::after { right: -26px; clip-path: polygon(0 38%, 100% 0, 78% 25%, 100% 50%, 78% 75%, 100% 100%, 0 62%); }
     .btn:hover { filter: brightness(1.06); }
-    .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c2186b, 0 4px 10px rgba(224, 35, 126, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.6); }
-    .btn.secondary {
-      background: linear-gradient(180deg, #a6e4ff, #4cc3f5 55%, #1d9fd8);
-      box-shadow: 0 6px 0 #1683b5, 0 10px 20px rgba(29, 159, 216, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+    .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--edge), 0 4px 10px rgba(224, 35, 126, 0.3), inset 0 -4px 8px rgba(0, 0, 0, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.7); }
+    .btn.secondary { --c1: #b5e9ff; --c2: #4cc3f5; --c3: #1d9fd8; --edge: #1683b5; }
+    .btn.outline, .btn.ghost {
+      --c1: #fff; --c2: #fff3f9; --c3: #ffe0ef; --edge: #ffb3d9;
+      color: var(--pink-deep); text-shadow: none; border: 2px solid #ffb3d9;
     }
-    .btn.outline {
-      background: rgba(255, 255, 255, 0.7); color: var(--pink-deep); border: 2px solid var(--pink);
-      box-shadow: 0 4px 0 #ffb3d9; text-shadow: none;
-    }
-    .btn.ghost {
-      background: rgba(255, 255, 255, 0.5); color: var(--ink-soft); border: 2px solid #ffc4e2;
-      box-shadow: none; text-shadow: none;
-    }
-    .btn.outline::before, .btn.ghost::before { display: none; }
+    .btn.ghost { color: var(--ink-soft); }
+    .share .btn { width: auto; margin: 0 26px 0 30px; padding: 10px 16px; }
     .btn:disabled { opacity: 0.45; cursor: not-allowed; }
     input[type="text"] {
       width: 100%; padding: 12px; font-family: inherit; font-size: 16px; text-align: center;
@@ -125,7 +127,6 @@
     .share input[type="text"] {
       flex: 1; margin: 0; font-size: 13px; letter-spacing: 0; text-transform: none; text-align: left; padding: 10px 14px;
     }
-    .share .btn { width: auto; margin: 0; padding: 10px 16px; }
     .share-hint { margin-bottom: 12px; font-size: 11px; }
     .room-label { margin-top: 16px; }
     #lobby-card.link-room .room-details,
@@ -162,32 +163,49 @@
       display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
       width: 100%; margin-bottom: 10px;
     }
-    .hud-group { display: flex; gap: 10px; }
+    .hud-group { display: flex; gap: 4px; }
     .hud-group.right { justify-content: flex-end; }
+    /* The clock is a little white wrapped sweet too. */
     #timer {
-      font-size: 14px; color: var(--pink-deep); font-variant-numeric: tabular-nums;
-      background: rgba(255, 255, 255, 0.85); padding: 4px 14px; border-radius: 999px;
-      box-shadow: inset 0 2px 0 #fff, 0 3px 10px rgba(224, 35, 126, 0.2);
+      --c1: #fff; --c2: #fff3f9; --c3: #ffd6ea; --edge: #ffb3d9;
+      position: relative; font-size: 14px; color: var(--pink-deep); font-variant-numeric: tabular-nums;
+      padding: 4px 16px; border-radius: 999px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0, rgba(255, 255, 255, 0) 50%),
+        linear-gradient(180deg, var(--c1), var(--c2) 55%, var(--c3));
+      box-shadow: 0 3px 0 var(--edge), 0 6px 12px rgba(224, 35, 126, 0.2);
     }
     /* Last 10 seconds: bright red with a pulse on every tick. */
-    #timer.low { color: #fff; background: linear-gradient(180deg, #ff6b8a, #e0234f); }
+    #timer.low { --c1: #ff9cb0; --c2: #ff4f74; --c3: #d81b47; --edge: #a8122f; color: #fff; }
     #timer.pulse { animation: timer-pulse 0.45s ease-out; }
     @keyframes timer-pulse {
       from { transform: scale(1.4); box-shadow: 0 0 18px rgba(224, 35, 79, 0.8); }
       to { transform: scale(1); }
     }
-    /* Glossy score pills in each player's colour. */
+    /* Scores are wrapped sweets in each player's colour (set as the element's colour). */
     .score-tag {
-      position: relative; overflow: hidden;
-      padding: 5px 14px; border-radius: 999px; border: 2px solid #fff;
-      background: currentColor;
-      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12), 0 6px 14px rgba(224, 35, 126, 0.2);
+      position: relative;
+      padding: 5px 14px; border-radius: 999px; margin: 0 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0, rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.14) 100%),
+        currentColor;
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.16), 0 6px 14px rgba(224, 35, 126, 0.2), inset 0 2px 0 rgba(255, 255, 255, 0.6);
       display: flex; align-items: center; gap: 10px; white-space: nowrap;
     }
-    .score-tag::before {
-      content: ''; position: absolute; left: 6%; right: 6%; top: 2px; height: 45%; border-radius: 999px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0)); pointer-events: none;
+    .score-tag::before, .score-tag::after, #timer::before, #timer::after {
+      content: ''; position: absolute; top: 14%; width: 18px; height: 72%; pointer-events: none;
+      background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0 2px, rgba(255, 255, 255, 0) 2px 5px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.12)),
+        currentColor;
     }
+    #timer::before, #timer::after {
+      background:
+        repeating-linear-gradient(90deg, rgba(255, 79, 163, 0.25) 0 2px, rgba(255, 255, 255, 0) 2px 5px),
+        linear-gradient(180deg, var(--c1), var(--c3));
+    }
+    .score-tag::before, #timer::before { left: -15px; clip-path: polygon(100% 38%, 0 0, 25% 25%, 0 50%, 25% 75%, 0 100%, 100% 62%); }
+    .score-tag::after, #timer::after { right: -15px; clip-path: polygon(0 38%, 100% 0, 75% 25%, 100% 50%, 75% 75%, 100% 100%, 0 62%); }
     .score-tag.right { flex-direction: row-reverse; }
     .score-tag.empty { visibility: hidden; }
     .score-tag.bump .tag-score { animation: score-bump 0.35s ease-out; }
