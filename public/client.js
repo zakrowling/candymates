@@ -1175,13 +1175,29 @@
     return state.playing && state.readyTicks <= 0 && state.ticksLeft > 0;
   }
 
+  // Before you pick or swap, your screen skips to the latest board (finishing anyone else's
+  // animations instantly), so you're always playing on what's really there, even when four people
+  // are swapping at once and the animations have fallen behind.
+  function catchUp() {
+    if (state.current || state.queue.length) flushQueue();
+  }
+
+  // The candy you picked, remembered by id: if someone else's cascade takes it before you finish
+  // the swap, the host refuses it rather than swapping something you didn't choose.
+  function pick(cell) {
+    const candy = state.grid[cell.y] && state.grid[cell.y][cell.x];
+    return { ...cell, id: candy && candy.id };
+  }
+
   function trySwap(a, b) {
     if (!canPlay()) return;
     if (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) !== 1) return;
+    catchUp();
     const ca = state.grid[a.y] && state.grid[a.y][a.x];
     const cb = state.grid[b.y] && state.grid[b.y][b.x];
     if (!ca || !cb) return;
-    socket.emit('input', { type: 'swap', a: { x: a.x, y: a.y, id: ca.id }, b: { x: b.x, y: b.y, id: cb.id } });
+    const aId = a.id !== undefined ? a.id : ca.id;
+    socket.emit('input', { type: 'swap', a: { x: a.x, y: a.y, id: aId }, b: { x: b.x, y: b.y, id: cb.id } });
     state.selected = null;
     state.drag = null;
   }
@@ -1208,8 +1224,10 @@
       trySwap(sel, cell);
       return;
     }
-    state.selected = sel && sel.x === cell.x && sel.y === cell.y ? null : cell;
-    state.drag = { cell, px: e.clientX, py: e.clientY };
+    catchUp();
+    const picked = pick(cell);
+    state.selected = sel && sel.x === cell.x && sel.y === cell.y ? null : picked;
+    state.drag = { cell: picked, px: e.clientX, py: e.clientY };
     sendCursor(cell);
   });
 
@@ -1258,7 +1276,8 @@
       }
     } else if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
-      state.selected = state.selected ? null : here;
+      catchUp();
+      state.selected = state.selected ? null : pick(here);
       sendCursor(here);
     } else if (e.key === 'Escape') {
       state.selected = null;
