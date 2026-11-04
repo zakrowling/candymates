@@ -62,7 +62,7 @@
       comp.threshold.value = -14;
       comp.ratio.value = 6;
       master = audioCtx.createGain();
-      master.gain.value = 0.8;
+      master.gain.value = soundPrefs.sfx ? SFX_GAIN : 0;
       master.connect(comp).connect(audioCtx.destination);
       noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
       const data = noiseBuffer.getChannelData(0);
@@ -286,8 +286,40 @@
         if (clock && !fadeOutFrom) fadeOutFrom = performance.now();
       },
       stop: halt,
+      setMuted(m) {
+        tracks.forEach((t) => { t.muted = m; });
+      },
     };
   })();
+
+  // ---------- Music and sound effects on/off ----------
+  // Two buttons beside the clock. Each player's choice is remembered on their device and only
+  // affects them. Effects all go through the master gain; music is muted on its own player.
+  const soundPrefs = (() => {
+    const read = (k) => { try { return localStorage.getItem(`candymates-${k}`) !== 'off'; } catch { return true; } };
+    return { music: read('music'), sfx: read('sfx') };
+  })();
+  const SFX_GAIN = 0.8;
+  function applySoundPrefs() {
+    if (master) master.gain.value = soundPrefs.sfx ? SFX_GAIN : 0;
+    music.setMuted(!soundPrefs.music);
+    [['music-toggle', soundPrefs.music, 'Music'], ['sfx-toggle', soundPrefs.sfx, 'Sound effects']].forEach(([id, on, label]) => {
+      const btn = document.getElementById(id);
+      btn.setAttribute('aria-pressed', String(on));
+      btn.classList.toggle('off', !on);
+      btn.title = `${label} ${on ? 'on' : 'off'} (click to turn ${on ? 'off' : 'on'})`;
+    });
+  }
+  [['music-toggle', 'music'], ['sfx-toggle', 'sfx']].forEach(([id, key]) => {
+    document.getElementById(id).addEventListener('click', (e) => {
+      soundPrefs[key] = !soundPrefs[key];
+      try { localStorage.setItem(`candymates-${key}`, soundPrefs[key] ? 'on' : 'off'); } catch { /* private mode */ }
+      applySoundPrefs();
+      // A mouse click shouldn't leave focus here, or Space would toggle it again instead of playing.
+      if (e.detail) e.currentTarget.blur();
+    });
+  });
+  applySoundPrefs();
 
   // ---------- Candy drawing ----------
 
@@ -1262,7 +1294,7 @@
   // Keyboard: arrows move, Space/Enter picks a candy, then an arrow swaps it that way.
   const DIRS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
   window.addEventListener('keydown', (e) => {
-    if (!state.playing || e.target.tagName === 'INPUT') return;
+    if (!state.playing || e.target.tagName === 'INPUT' || (e.target.closest && e.target.closest('.sound-toggle'))) return;
     const dir = DIRS[e.key] || DIRS[e.key.toLowerCase()];
     const here = state.hover || { x: Math.floor(state.cols / 2), y: Math.floor(state.rows / 2) };
     if (dir) {
