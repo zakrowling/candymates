@@ -14,6 +14,16 @@
     "Found the room but couldn't connect to the host. A firewall or VPN may be blocking peer-to-peer connections.";
   const ENTER_ROOM_DEADLINE_MS = 45000; // a crashed host's ID can stay reserved on the PeerJS server for a while
   const HANDOVER_STAGGER_MS = 1500;
+  // A link room whose host can't be reached (a crashed or frozen tab still holding the name, or a host
+  // on a network nobody can connect to) would block the name. Instead everyone falls through, in the
+  // same order, to backup rooms NAME_2, NAME_3... ('_' can't appear in typed room names, so these never
+  // clash with a real room). Players still see the room as NAME.
+  const MAX_ROOM_SLOTS = 4;
+  const slotCode = (code, slot) => (slot > 1 ? `${code}_${slot}` : code);
+  const splitSlot = (peerCode) => {
+    const m = /^(.*)_(\d+)$/.exec(peerCode);
+    return m ? [m[1], Number(m[2])] : [peerCode, 1];
+  };
   const ROOM_NAME_RE = /^[A-Z0-9](?:[A-Z0-9-]{0,14}[A-Z0-9])$/;
 
   // ICE servers: Google STUN for direct connections, plus TURN relays from config.js when configured.
@@ -165,7 +175,7 @@
         mode = 'host';
         localId = id;
         ticker = createTicker();
-        room = new GameRoom(code, {
+        room = new GameRoom(splitSlot(code)[0], {
           broadcast: hostBroadcast,
           send: hostSend,
           setInterval: ticker.setInterval,
@@ -259,19 +269,27 @@
 
     // ---------- Link rooms and host handover ----------
 
-    // Join the room if someone is hosting it, otherwise become its host.
-    function enterRoom(code, ack, preferredName, deadline = Date.now() + ENTER_ROOM_DEADLINE_MS) {
-      joinRoom(code, (res) => {
+    // Join the room if someone is hosting it, otherwise become its host. If the room's host can't be
+    // reached, move on to the next backup slot rather than giving up.
+    function enterRoom(code, ack, preferredName, deadline = Date.now() + ENTER_ROOM_DEADLINE_MS, slot = 1) {
+      const peerCode = slotCode(code, slot);
+      const nextSlot = () => {
+        if (slot >= MAX_ROOM_SLOTS) return ack({ ok: false, error: HOST_UNREACHABLE });
+        dispatch('status', "Couldn't reach the room's host. Opening a backup room...");
+        enterRoom(code, ack, preferredName, Date.now() + ENTER_ROOM_DEADLINE_MS, slot + 1);
+      };
+      joinRoom(peerCode, (res) => {
         // Success, a real refusal (e.g. full), or PeerJS itself unreachable: nothing more to try.
         if (res.ok || res.timeout === 'server' || !(res.notFound || res.timeout)) return ack(res);
+        // Someone holds this slot but we can't reach them: skip it.
+        if (res.timeout === 'host') return nextSlot();
         createRoom((hostRes) => {
           if (hostRes.ok || !hostRes.taken) return ack(hostRes);
-          // The room has a host we couldn't connect to: retrying won't help.
-          if (res.timeout === 'host' || Date.now() > deadline) return ack({ ok: false, error: HOST_UNREACHABLE });
+          if (Date.now() > deadline) return nextSlot();
           // Someone else claimed the room at the same moment; join them instead.
           dispatch('status', 'Someone just opened the room. Joining them...');
-          setTimeout(() => enterRoom(code, ack, preferredName, deadline), 800 + Math.random() * 700);
-        }, 0, code, preferredName);
+          setTimeout(() => enterRoom(code, ack, preferredName, deadline, slot), 800 + Math.random() * 700);
+        }, 0, peerCode, preferredName);
       }, preferredName);
     }
 
@@ -286,11 +304,12 @@
       const rank = Math.max(0, others.findIndex((p) => p.id === me));
       const myName = (((lobby && lobby.players) || []).find((p) => p.id === me) || {}).name;
       dispatch('reconnecting', 'The host left. Reconnecting...');
+      const [base, slot] = splitSlot(code);
       setTimeout(() => {
-        enterRoom(code, (res) => {
+        enterRoom(base, (res) => {
           if (res.ok) dispatch('rejoined', res);
           else dispatch('disconnect', res.error || 'The room has closed.');
-        }, myName);
+        }, myName, undefined, slot);
       }, rank * HANDOVER_STAGGER_MS + Math.random() * 300);
     }
 
