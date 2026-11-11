@@ -105,6 +105,10 @@
       -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 60' preserveAspectRatio='none'%3E%3Cpath d='M40 23 C33 20 22 8 6 2 C9 7 3 10 5 15 C8 19 2 23 4 30 C2 37 8 41 5 45 C3 50 9 53 6 58 C22 52 33 40 40 37 Z'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
       mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 60' preserveAspectRatio='none'%3E%3Cpath d='M40 23 C33 20 22 8 6 2 C9 7 3 10 5 15 C8 19 2 23 4 30 C2 37 8 41 5 45 C3 50 9 53 6 58 C22 52 33 40 40 37 Z'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
     }
+    /* The sweet sits in front of its twists: each element is its own stacking layer and the twists
+       go behind its background. */
+    .btn, .score-tag, #timer { isolation: isolate; }
+    .btn::before, .btn::after, .score-tag::before, .score-tag::after, #timer::before, #timer::after { z-index: -1; }
     .btn::before, .btn::after { width: 34px; }
     .btn::before { left: -28px; }
     .btn::after { right: -28px; transform: scaleX(-1); }
