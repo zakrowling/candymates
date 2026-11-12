@@ -92,7 +92,7 @@
       font-family: inherit; font-size: 15px; font-weight: 500; border-radius: 999px; cursor: pointer;
       text-shadow: 0 1px 1px rgba(60, 0, 30, 0.45);
       box-shadow: 0 5px 0 var(--edge), 0 10px 18px rgba(224, 35, 126, 0.3), inset 0 -4px 8px rgba(0, 0, 0, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.7);
-      transition: transform 0.08s, box-shadow 0.08s;
+      transition: top 0.08s, box-shadow 0.08s;
     }
     /* Wrapper twists: a cellophane fan with a frilly edge and pleats running out from a gathered neck
        that tucks into the sweet. The shape is a mask over the sweet's own colours, so every button
@@ -107,15 +107,17 @@
     }
     /* The sweet sits in front of its twists: each element is its own stacking layer and the twists
        go behind its background. */
-    .btn, .score-tag, #timer { isolation: isolate; }
+    /* (The sweet itself mustn't be a stacking context, or its twists would paint over its own
+       background — so no filter/transform/opacity on it; the parent is the layer instead.) */
+    :has(> .btn), :has(> .score-tag), :has(> #timer) { isolation: isolate; }
     .btn::before, .btn::after, .score-tag::before, .score-tag::after, #timer::before, #timer::after { z-index: -1; }
     .btn::before, .btn::after { width: 42px; }
     .btn::before { left: -28px; }
     .btn::after { right: -28px; transform: scaleX(-1); }
     /* The ends of the sweet pinch in where the wrapper is gathered. */
     .btn { background-clip: padding-box; }
-    .btn:hover { filter: brightness(1.06); }
-    .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--edge), 0 4px 10px rgba(224, 35, 126, 0.3), inset 0 -4px 8px rgba(0, 0, 0, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.7); }
+    .btn:hover { box-shadow: 0 5px 0 var(--edge), 0 10px 18px rgba(224, 35, 126, 0.3), inset 0 -4px 8px rgba(0, 0, 0, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.7), inset 0 0 0 999px rgba(255, 255, 255, 0.07); }
+    .btn:active { top: 3px; box-shadow: 0 2px 0 var(--edge), 0 4px 10px rgba(224, 35, 126, 0.3), inset 0 -4px 8px rgba(0, 0, 0, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.7); }
     .btn.secondary { --c1: #2c8fd0; --c2: #0a74b8; --c3: #075a92; --edge: #054470; }
     .btn.outline, .btn.ghost {
       --c1: #fff; --c2: #fff3f9; --c3: #ffe0ef; --edge: #e48ab8;
@@ -123,7 +125,8 @@
     }
     .btn.ghost { color: var(--ink-soft); }
     .share .btn { width: auto; margin: 0 26px 0 30px; padding: 10px 16px; }
-    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn:disabled { cursor: not-allowed; color: rgba(255, 255, 255, 0.6); box-shadow: 0 5px 0 color-mix(in srgb, var(--edge) 45%, #fbe3ef), inset 0 0 0 999px rgba(251, 227, 239, 0.55); }
+    .btn:disabled::before, .btn:disabled::after { opacity: 0.45; }
     input[type="text"] {
       width: 100%; padding: 12px; font-family: inherit; font-size: 16px; text-align: center;
       text-transform: uppercase; background: rgba(255, 255, 255, 0.9); border: 2px solid #ffb3d9;
@@ -241,8 +244,8 @@
     #timer.low { --c1: #e0294f; --c2: #c8143c; --c3: #a00f2f; --edge: #70091f; color: #fff; }
     #timer.pulse { animation: timer-pulse 0.45s ease-out; }
     @keyframes timer-pulse {
-      from { transform: scale(1.4); box-shadow: 0 0 18px rgba(224, 35, 79, 0.8); }
-      to { transform: scale(1); }
+      from { font-size: 19.6px; box-shadow: 0 0 18px rgba(224, 35, 79, 0.8); }
+      to { font-size: 14px; }
     }
     /* Scores are wrapped sweets in each player's colour (set as the element's colour). */
     .score-tag {
