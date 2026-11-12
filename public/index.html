@@ -109,7 +109,7 @@
        go behind its background. */
     .btn, .score-tag, #timer { isolation: isolate; }
     .btn::before, .btn::after, .score-tag::before, .score-tag::after, #timer::before, #timer::after { z-index: -1; }
-    .btn::before, .btn::after { width: 34px; }
+    .btn::before, .btn::after { width: 42px; }
     .btn::before { left: -28px; }
     .btn::after { right: -28px; transform: scaleX(-1); }
     /* The ends of the sweet pinch in where the wrapper is gathered. */
@@ -252,7 +252,7 @@
       display: flex; align-items: center; gap: 10px; white-space: nowrap;
       transition: background 0.2s, box-shadow 0.2s;
     }
-    .score-tag::before, .score-tag::after, #timer::before, #timer::after { width: 20px; }
+    .score-tag::before, .score-tag::after, #timer::before, #timer::after { width: 26px; }
     .score-tag::before, #timer::before { left: -16px; }
     .score-tag::after, #timer::after { right: -16px; transform: scaleX(-1); }
     .score-tag { --c1: #fff; --c2: #fff; --c3: #ffe3f0; }
@@ -335,6 +335,7 @@
         <div class="score-tag empty" data-slot="2"></div>
       </div>
       <div class="hud-centre">
+        <button type="button" class="sound-toggle" id="game-home" aria-label="Back to the lobby" title="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <button type="button" class="sound-toggle" id="music-toggle" aria-pressed="true" aria-label="Music" title="Music on/off">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="17.5" cy="16" r="2.5" fill="currentColor"/><path class="off-slash" d="M3 3l18 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
         </button>
