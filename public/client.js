@@ -1280,11 +1280,22 @@
 
   // ---------- Controls ----------
 
+  // The page is zoomed (html { zoom }). Browsers with the standard CSS zoom give element boxes and
+  // pointer positions in the same units; older ones give boxes unzoomed but pointers in screen
+  // pixels, so the pointer is divided by the zoom to match.
+  const LEGACY_ZOOM = !('currentCSSZoom' in Element.prototype);
+  // Where the pointer is on the board, as fractions (0-1) of its width and height.
+  function boardPoint(e) {
+    const rect = canvas.getBoundingClientRect();
+    const z = LEGACY_ZOOM ? parseFloat(getComputedStyle(document.documentElement).zoom) || 1 : 1;
+    return { fx: (e.clientX / z - rect.left) / rect.width, fy: (e.clientY / z - rect.top) / rect.height, z };
+  }
+
   // The cell under the pointer, plus its exact position in board cells (px, py).
   function cellFromEvent(e) {
-    const rect = canvas.getBoundingClientRect();
-    const px = ((e.clientX - rect.left) / rect.width) * state.cols;
-    const py = ((e.clientY - rect.top) / rect.height) * state.rows;
+    const { fx, fy } = boardPoint(e);
+    const px = fx * state.cols;
+    const py = fy * state.rows;
     const x = Math.floor(px);
     const y = Math.floor(py);
     if (x < 0 || y < 0 || x >= state.cols || y >= state.rows) return null;
@@ -1350,11 +1361,8 @@
   // the system arrow. Touch has no pointer to draw.
   function trackMyPointer(e) {
     if (e.pointerType === 'touch') return;
-    const rect = canvas.getBoundingClientRect();
-    state.myPointer = {
-      x: ((e.clientX - rect.left) / rect.width) * state.cols * CELL,
-      y: ((e.clientY - rect.top) / rect.height) * state.rows * CELL,
-    };
+    const { fx, fy } = boardPoint(e);
+    state.myPointer = { x: fx * state.cols * CELL, y: fy * state.rows * CELL };
   }
 
   canvas.addEventListener('pointerdown', (e) => {
@@ -1381,8 +1389,9 @@
     const cell = cellFromEvent(e);
     if (state.drag) {
       // Dragging a candy far enough towards a neighbour swaps them.
-      const rect = canvas.getBoundingClientRect();
-      const cellPx = rect.width / state.cols;
+      // (drag distances are in screen pixels, so the cell's on-screen size too)
+      const { z } = boardPoint(e);
+      const cellPx = (canvas.getBoundingClientRect().width * z) / state.cols;
       const dx = e.clientX - state.drag.px;
       const dy = e.clientY - state.drag.py;
       if (Math.max(Math.abs(dx), Math.abs(dy)) > cellPx * 0.4) {
