@@ -244,10 +244,17 @@
     @keyframes turn-pop { from { transform: scale(1); } to { transform: scale(1.06); } }
     /* Last 10 seconds: bright red with a pulse on every tick. */
     #timer.low { --c1: #e0294f; --c2: #c8143c; --c3: #a00f2f; --edge: #70091f; color: #fff; }
-    #timer.pulse { animation: timer-pulse 0.45s ease-out; }
+    /* The last 10 seconds' tick: only the digits pop (scaled, so nothing around them moves; the sweet
+       itself isn't transformed, so its wrapper twists stay behind it). */
+    #timer-text { display: inline-block; }
+    #timer.pulse #timer-text { animation: timer-pulse 0.45s ease-out; }
+    #timer.pulse { animation: timer-glow 0.45s ease-out; }
     @keyframes timer-pulse {
-      from { font-size: 19.6px; box-shadow: 0 0 18px rgba(224, 35, 79, 0.8); }
-      to { font-size: 14px; }
+      from { transform: scale(1.4); }
+      to { transform: scale(1); }
+    }
+    @keyframes timer-glow {
+      from { box-shadow: 0 3px 0 var(--edge), 0 0 18px rgba(224, 35, 79, 0.8); }
     }
     /* Scores are wrapped sweets in each player's colour (set as the element's colour). */
     .score-tag {
@@ -349,7 +356,7 @@
       </div>
       <div class="hud-centre">
         <button type="button" class="sound-toggle" id="game-home" aria-label="Back to the lobby" title="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <div id="timer"></div>
+        <div id="timer"><span id="timer-text"></span></div>
       </div>
       <div class="hud-group right">
         <div class="score-tag right empty" data-slot="3"></div>

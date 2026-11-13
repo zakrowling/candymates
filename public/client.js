@@ -1446,14 +1446,14 @@
       const left = t ? Math.max(0, Math.ceil(t.ticksLeft * state.tickMs / 1000)) : 0;
       const text = `0:${String(left).padStart(2, '0')}`;
       const el = $('timer');
-      if (el.textContent !== text) el.textContent = text;
+      if ($('timer-text').textContent !== text) $('timer-text').textContent = text;
       el.classList.toggle('low', !!t && t.id === state.playerId && left <= 3);
       return;
     }
     const secs = Math.max(0, Math.ceil(state.ticksLeft * state.tickMs / 1000));
     const text = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
     const el = $('timer');
-    if (el.textContent !== text) el.textContent = text;
+    if ($('timer-text').textContent !== text) $('timer-text').textContent = text;
     el.classList.toggle('low', secs <= 10);
     if (secs !== state.lastTimerSecs) {
       if (state.playing && state.readyTicks <= 0 && secs >= 1 && secs <= 10 && state.lastTimerSecs !== undefined) {
