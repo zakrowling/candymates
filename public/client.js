@@ -789,10 +789,10 @@
     if (e.key === 'Enter') $('join-btn').click();
   });
   // Footer instructions for each way of playing.
-  const HOW_TO_SWAP = 'Swap two neighbouring candies (drag, or click one then the other) to line up 3 or more. Match 4 for a striped candy, an L or T for a wrapped candy and 5 for a colour bomb. Cascades multiply your points.';
+  const HOW_TO_SWAP = 'Swap neighbouring candies to match 3+. 4 makes a striped candy, an L or T a wrapped one, 5 a colour bomb.';
   const HINTS = {
-    free: `Everyone plays the same board at the same time. ${HOW_TO_SWAP} Highest score after 3 minutes wins.`,
-    turns: `Take turns on the same board: one swap per turn, 10 seconds a turn, 10 turns each. ${HOW_TO_SWAP} Highest score wins.`,
+    free: `Everyone plays one board at once. ${HOW_TO_SWAP} Top score after 3 minutes wins.`,
+    turns: `Take turns: one swap, 10s each, 10 turns. ${HOW_TO_SWAP} Top score wins.`,
   };
 
   // Free for all (everyone swaps at once) or take turns; remembered for next time.

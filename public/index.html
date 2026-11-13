@@ -176,7 +176,7 @@
     .hint { color: var(--ink-soft); margin-top: 10px; text-align: center; }
 
     #game-view { display: none; flex-direction: column; align-items: center; position: relative; }
-    #game-view > .hint { max-width: 1032px; font-size: 12px; }
+    #game-view > .hint { font-size: 11px; }
     /* All four scores sit above the board: P1 and P2 on the left, P3 and P4 on the right,
        with the countdown centred between them at the same size as the scores. */
     .hud {
@@ -284,6 +284,12 @@
       display: none; position: absolute; inset: 70px 0 auto 0; margin: auto; width: 360px;
     }
     #game-over h3 { color: var(--pink-deep); margin-bottom: 12px; font-size: 24px; font-weight: 500; text-shadow: 0 2px 0 #fff; }
+    /* The line of instructions under the game runs the full width of the page, centred (100vw is
+       scaled by the page's zoom, so it's divided back out). */
+    #game-view > .hint {
+      width: calc(100vw / 0.9); max-width: none; box-sizing: border-box; padding: 0 24px;
+      align-self: center; text-align: center;
+    }
   </style>
 </head>
 <body>
